@@ -26,11 +26,48 @@ class TodoList {
   }
 
   /*
-  <div
+    TodoList.all() returns a promise for the collection of all todoList objects from the API.
+    It also takes those todoLists and calls render on them, generating the li DOM nodes that 
+    display them, and spreading them out into the list where they'll be appended to the DOM.
+  */
+  static all() {
+    return fetch("http://localhost:3000/todo_lists")
+      .then(res => res.json())
+      .then(todoListsJson => {
+        this.collection = todoListsJson.map(tlAttributes => new TodoList(tlAttributes))
+        let listItems = lists.map(list => list.render())
+        this.list().append(...listItems)
+        return this.collection
+      })
+  }
+
+  /*
+  <li class="my-2 px-4 bg-green-200 grid grid-cols-12 sm:grid-cols-6">
+    <a href="#" class="py-4 col-span-10 sm:col-span-4">My List</a>
+    <a href="#" class="editList my-4 text-right"><i class="fa fa-pencil-alt"></i></a>
+    <a href="#" class="deleteList my-4 text-right"><i class="fa fa-trash-alt"></i></a>
+  </li>
   */
   render() {
+    this.element ||= document.createElement('li');
 
+    this.element.classList.add(..."my-2 px-4 bg-green-200 grid grid-cols-12 sm:grid-cols-6".split(" "));
+    this.nameLink ||= document.createElement('a');
+    this.nameLink.classList.add(..."py-4 col-span-10 sm:col-span-4".split(" "));
+    this.nameLink.textContent = this.name;
+    if(!this.editLink) {
+      this.editLink = document.createElement('a');
+      this.editLink.classList.add(..."editList my-4 text-right".split(" "));
+      this.editLink.innerHTML = '<i class="fa fa-pencil-alt"></i>';
+      this.deleteLink = document.createElement('a');
+      this.deleteLink.classList.add(..."deleteList my-4 text-right".split(" "));
+      this.deleteLink.innerHTML = '<i class="fa fa-trash-alt"></i>';
+    }
+
+    this.element.append(this.nameLink, this.editLink, this.deleteLink);
+    return this.element;
   }
+
 }
 
 class Task {
