@@ -2,6 +2,9 @@ class TodoList {
   constructor(attributes) {
     let whitelist = ["id", "name", "active"]
     whitelist.forEach(attr => this[attr] = attributes[attr])
+    // if this list is active, store a reference to it so we can toggle its background color later on when
+    // we mark another list as the active list.
+    if(this.active) { TodoList.active = this; }
   }
   /*
   TodoList.container() returns a reference to this DOM node:
@@ -82,6 +85,34 @@ class TodoList {
   */
   static findById(id) {
     return this.collection.find(todoList => todoList.id == id)
+  }
+
+  /*
+  todoList.show() will make a fetch request to the show route that will use a different serializer that includes the tasks 
+  that belong to a list. Upon response, it will call toggleActive() on the todoList, adding the darker background color to 
+  the selected list and restoring the original.
+  */
+  show() {
+    return fetch(`http://localhost:3000/todo_lists/${this.id}`, {
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      }
+    })
+      .then(res => {
+        if(res.ok) {
+          return res.json()
+        } else {
+          return res.text().then(errors => Promise.reject(errors))
+        }
+      })
+      .then((json) => {
+        debugger
+        this.toggleActive();
+      })
+      .catch(error => {
+        new FlashMessage({type: 'error', message: error});
+      })
   }
 
   /*
@@ -194,6 +225,22 @@ class TodoList {
   }
 
   /*
+  todoList.toggleActive() will toggle the background color of the previously active list to the original bg-green-200. 
+  it will then replace the original background color of the newly selected list with bg-green-400. Finally, it will mark
+  this list as the active list so we'll be able to switch its color back to the original when another list is selected.
+  */
+  toggleActive() {
+    // only toggle the active list's background color if there is an active list.
+    if(TodoList.active) { 
+      TodoList.active.element.classList.replace("bg-green-400", "bg-green-200");
+      TodoList.active.active = false; // update the active property of previously active list to false
+    }
+    // make this one darker and mark it as the currently active list
+    this.element.classList.replace("bg-green-200", "bg-green-400");
+    TodoList.active = this;
+  }
+
+  /*
   <li class="my-2 px-4 bg-green-200 grid grid-cols-12 sm:grid-cols-6">
     <a href="#" class="py-4 col-span-10 sm:col-span-4">My List</a>
     <a href="#" class="editList my-4 text-right"><i class="fa fa-pencil-alt"></i></a>
@@ -205,7 +252,8 @@ class TodoList {
 
     this.element.classList.add(..."my-2 pl-4 bg-green-200 grid grid-cols-12 sm:grid-cols-6".split(" "));
     this.nameLink ||= document.createElement('a');
-    this.nameLink.classList.add(..."py-4 col-span-10 sm:col-span-4 cursor-pointer".split(" "));
+    this.nameLink.classList.add(..."selectTodoList py-4 col-span-10 sm:col-span-4 cursor-pointer".split(" "));
+    this.nameLink.dataset.todoListId = this.id;
     this.nameLink.textContent = this.name;
     // only create the edit and delete links if we don't already have them
     if(!this.editLink) {

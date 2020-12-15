@@ -10,6 +10,9 @@ document.addEventListener('click', function(e) {
   } else if (target.matches('.deleteTodoList')) {
     let list = TodoList.findById(target.dataset.todoListId);
     list.delete();
+  } else if (target.matches('.selectTodoList')) {
+    let list = TodoList.findById(target.dataset.todoListId);
+    list.show();
   }
 })
 
