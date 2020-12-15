@@ -72,6 +72,97 @@ class TodoList {
         new FlashMessage({type: 'error', message: error});
       })
   }
+  /*
+  TodoList.findById(id) will return the TodoList object that matches the id passed as an argument.
+  We'll assume here that this.collection exists because we won't be calling this method until the DOM 
+  we've clicked on an element created by one of our TodoList instances that we created and stored in 
+  this.collection when the initial fetch has completed and promise callbacks have been executed.
+  We're using == instead of === here so we can take advantage of type coercion 
+  (the dataset property on the target element will be a string, whereas the id of the TodoList will be an integer)
+  */
+  static findById(id) {
+    return this.collection.find(todoList => todoList.id == id)
+  }
+
+  /*
+  This method will remove the contents of the element and replace them with the form we can use to edit the
+  todo list. We'll also change the styling of our this.element li a little so it looks better within the list.
+  <li class="my-2 bg-green-200">  
+    <form class="edit-todo-list flex mt-4" data-todo-list-id=${this.id}>
+      <input type="text" class="flex-1 p-3" name="name" value="${this.name} />
+      <button type="submit" class="flex-none"><i class="fa fa-save p-4 z--1 bg-green-400"></i></button>
+    </form>
+  </li>
+  */
+  edit() {
+    // remove the current contents of the element representing this TodoList and remove grid styles
+    [this.nameLink, this.editLink, this.deleteLink].forEach(el => el.remove())
+    this.element.classList.remove(..."grid grid-cols-12 sm:grid-cols-6 pl-4".split(" "))
+    // if we've already created the form, all we need to do is make sure the value of
+    // the name input matches the current name of the todo list
+    if(this.form) {
+      this.nameInput.value = this.name;
+    } else {
+      this.form = document.createElement('form');
+      // adding the classes this way lets us copy what we'd have in our html here.
+      // we need to run split(" ") to get an array of class names individually, then we 
+      // call ... (the spread operator) on that array so we can spread out each element
+      // as a separate argument to classList, which accepts a sequence of strings as arguments
+      this.form.classList.add(..."editTodoListForm flex mt-4".split(" "));
+      this.form.dataset.todoListId = this.id;
+      // create name input 
+      this.nameInput = document.createElement('input');
+      this.nameInput.value = this.name;
+      this.nameInput.name = 'name';
+      this.nameInput.classList.add(..."flex-1 p-3".split(" "));
+      // create save button 
+      this.saveButton = document.createElement('button');
+      this.saveButton.classList.add("flex-none");
+      this.saveButton.innerHTML = `<i class="fa fa-save p-4 z--1 bg-green-400"></i>`
+
+      this.form.append(this.nameInput, this.saveButton);
+    }
+    // add the form to the empty list item.
+    this.element.append(this.form);
+    this.nameInput.focus();
+  }
+  /*
+  todoList.update(formData) will make a fetch request to update the todoList via our API, we'll take the succesful response and
+  use it to update the DOM with the new name. We'll also replace the form with the original nameLink, editLink, and deleteLink 
+  and restore the styles on the this.element li to their initial state. We'll also show a successful flash message at the top.
+  If something goes wrong, we'll hold off on removing the form and instead raise a flash error message at the top allowing the 
+  user to try again.
+  */
+  update(formData) {
+    return fetch(`http://localhost:3000/todo_lists/${this.id}`, {
+      method: 'PUT',
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      },
+      body: JSON.stringify(formData)
+    })
+      .then(res => {
+        if(res.ok) {
+          return res.json()
+        } else {
+          return res.text().then(errors => Promise.reject(errors))
+        }
+      })
+      .then(json => {
+        //update this object with the json response
+        Object.keys(json).forEach((key) => this[key] = json[key])
+        // remove the form
+        this.form.remove();
+        // add the nameLink edit and delete links in again.
+        this.render();
+        new FlashMessage({type: 'success', message: 'TodoList updated successfully'})
+        return todoList;
+      })
+      .catch(error => {
+        new FlashMessage({type: 'error', message: error});
+      })
+  }
 
   /*
   <li class="my-2 px-4 bg-green-200 grid grid-cols-12 sm:grid-cols-6">
@@ -83,17 +174,18 @@ class TodoList {
   render() {
     this.element ||= document.createElement('li');
 
-    this.element.classList.add(..."my-2 px-4 bg-green-200 grid grid-cols-12 sm:grid-cols-6".split(" "));
+    this.element.classList.add(..."my-2 pl-4 bg-green-200 grid grid-cols-12 sm:grid-cols-6".split(" "));
     this.nameLink ||= document.createElement('a');
-    this.nameLink.classList.add(..."py-4 col-span-10 sm:col-span-4".split(" "));
+    this.nameLink.classList.add(..."py-4 col-span-10 sm:col-span-4 cursor-pointer".split(" "));
     this.nameLink.textContent = this.name;
+    // only create the edit and delete links if we don't already have them
     if(!this.editLink) {
       this.editLink = document.createElement('a');
-      this.editLink.classList.add(..."editList my-4 text-right".split(" "));
-      this.editLink.innerHTML = '<i class="fa fa-pencil-alt"></i>';
+      this.editLink.classList.add(..."my-1".split(" "));
+      this.editLink.innerHTML = `<i class="fa fa-pencil-alt editTodoList p-4 cursor-pointer" data-todo-list-id="${this.id}"></i>`;
       this.deleteLink = document.createElement('a');
-      this.deleteLink.classList.add(..."deleteList my-4 text-right".split(" "));
-      this.deleteLink.innerHTML = '<i class="fa fa-trash-alt"></i>';
+      this.deleteLink.classList.add(..."my-1".split(" "));
+      this.deleteLink.innerHTML = `<i class="fa fa-trash-alt deleteTodoList p-4 cursor-pointer" data-todo-list-id="${this.id}"></i>`;
     }
 
     this.element.append(this.nameLink, this.editLink, this.deleteLink);
