@@ -35,9 +35,41 @@ class TodoList {
       .then(res => res.json())
       .then(todoListsJson => {
         this.collection = todoListsJson.map(tlAttributes => new TodoList(tlAttributes))
-        let listItems = lists.map(list => list.render())
+        let listItems = this.collection.map(list => list.render())
         this.list().append(...listItems)
         return this.collection
+      })
+  }
+  /*
+  TodoList.create(formData) will post the todoList to the database, take the successful 
+  response and use it to create a new TodoList, add it to the collection, render it and
+  insert it into the list(). If there's an error, the validation message will get added.
+  */
+  static create(formData) {
+    return fetch("http://localhost:3000/todo_lists", {
+      method: 'POST',
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      },
+      body: JSON.stringify(formData)
+    })
+      .then(res => {
+        if(res.ok) {
+          return res.json()
+        } else {
+          return res.text().then(errors => Promise.reject(errors))
+        }
+      })
+      .then(json => {
+        let todoList = new TodoList(json);
+        this.collection.push(todoList);
+        this.list().appendChild(todoList.render());
+        new FlashMessage({type: 'success', message: 'TodoList added successfully'})
+        return todoList;
+      })
+      .catch(error => {
+        new FlashMessage({type: 'error', message: error});
       })
   }
 
@@ -77,6 +109,30 @@ class Task {
   }
 
   static container() {
-    return this.c ||= document.querySelector("#tasks")
+    return this.c = document.querySelector("#tasks")
   }
+}
+
+class FlashMessage {
+  constructor({message, type}) {
+    this.error = type === "error";
+    this.message = message;
+    this.render()
+  }
+
+  container() {
+    return this.c ||= document.querySelector("#flash")
+  }
+
+  render() {
+    this.container().textContent = this.message;
+    this.toggleDisplay();
+    setTimeout(() => this.toggleDisplay(), 5000);
+  }
+
+  toggleDisplay() {
+    this.container().classList.toggle('opacity-0');
+    this.container().classList.toggle(this.error ? 'bg-red-200' : 'bg-blue-200')
+    this.displayed = !this.displayed;
+  } 
 }
