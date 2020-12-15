@@ -164,6 +164,35 @@ class TodoList {
       })
   }
 
+  delete() {
+    let proceed = confirm("Are you sure you want to delete this list?");
+    if(proceed) {
+      return fetch(`http://localhost:3000/todo_lists/${this.id}`, {
+        method: 'DELETE',
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        }
+      })
+        .then(res => {
+          if(res.ok) {
+            return res.json()
+          } else {
+            return res.text().then(errors => Promise.reject(errors))
+          }
+        })
+        .then(json => {
+          //update this object with the json response
+          let index = TodoList.collection.findIndex(list => list.id == json.id);
+          TodoList.collection.splice(index, 1);
+          this.element.remove();
+        })
+        .catch(error => {
+          new FlashMessage({type: 'error', message: error});
+        })
+    }
+  }
+
   /*
   <li class="my-2 px-4 bg-green-200 grid grid-cols-12 sm:grid-cols-6">
     <a href="#" class="py-4 col-span-10 sm:col-span-4">My List</a>

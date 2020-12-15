@@ -7,6 +7,9 @@ document.addEventListener('click', function(e) {
   if (target.matches('.editTodoList')) {
     let list = TodoList.findById(target.dataset.todoListId);
     list.edit();
+  } else if (target.matches('.deleteTodoList')) {
+    let list = TodoList.findById(target.dataset.todoListId);
+    list.delete();
   }
 })
 
