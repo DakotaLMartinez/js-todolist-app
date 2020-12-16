@@ -51,3 +51,13 @@ Making a mockup of what you want the project to look like is a good first step
 </body>
 </html>
 ```
+
+Resources:
+
+[Tabnine AI code completion](https://marketplace.visualstudio.com/items?itemName=TabNine.tabnine-vscode)
+
+Spread operator 
+
+let arr1 = [1,2,3];
+let arr2 = [4,5,6];
+[...arr1, ...arr2]
