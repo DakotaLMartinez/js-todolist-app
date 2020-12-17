@@ -106,8 +106,8 @@ class TodoList {
           return res.text().then(errors => Promise.reject(errors))
         }
       })
-      .then((json) => {
-        debugger
+      .then(({todo_list, tasks}) => {
+        Task.loadFromList(tasks, todo_list.id)
         this.toggleActive();
       })
       .catch(error => {
@@ -273,12 +273,71 @@ class TodoList {
 
 class Task {
   constructor(attributes) {
-    let whitelist = ["id", "name", "todo_list_id", "complete", "due_by"]
+    let whitelist = ["id", "name", "todo_list_id", "complete", "notes"]
     whitelist.forEach(attr => this[attr] = attributes[attr])
   }
-
+  /*
+  <ul id="tasks" class="list-none">
+    
+  </ul>
+  */
   static container() {
     return this.c = document.querySelector("#tasks")
+  }
+
+  /*
+  Task.all() returns an object with keys of todo_list_id and the values are arrays of task instances.
+  */
+  static all() {
+    return this.collection ||= {};
+  }
+
+  /*
+  Task.loadFromList(tasks, todo_list_id) will accept an array of task attributes and a todo_list_id. It will create Tasks 
+  having the attributes in the array, store them in the this.collection object under the key matching the todo_list_id.
+  It also renders all of them and replaces the contents of the container with the rendered task elements. It also stores 
+  the todo_list_id as a property of the class so it'll be accessible when we submit the form to create a new task.
+  */
+  static loadFromList(tasks, todo_list_id) {
+    let taskObjects = tasks.map(attrs => new Task(attrs));
+    this.all()[todo_list_id] = taskObjects;
+    this.active_todo_list_id = todo_list_id;
+    let taskElements = taskObjects.map(task => task.render());
+    this.container().innerHTML = "";
+    this.container().append(...taskElements);
+  }
+
+  /*
+  <li class="my-2 px-4 bg-green-200 grid grid-cols-12">
+    <a href="#" class="my-1 text-center"><i class="p-4 far fa-circle"></i></a>
+    <span class="py-4 col-span-9">My First Task</span>
+    <a href="#" class="my-1 text-right"><i class="p-4 fa fa-pencil-alt"></i></a>
+    <a href="#" class="my-1 text-right"><i class="p-4 fa fa-trash-alt"></i></a>
+  </li>
+  */
+  render() {
+    this.element ||= document.createElement('li');
+    this.element.classList.add(..."my-2 px-1 bg-green-200 grid grid-cols-12".split(" "));
+
+    this.completeLink = document.createElement('a');
+    this.completeLink.classList.add(..."my-1 text-center".split(" "));
+    this.completeLink.innerHTML = `<i class="p-4 far fa-circle"></i>`
+
+    this.nameSpan ||= document.createElement('a');
+    this.nameSpan.classList.add(..."py-4 col-span-9".split(" "));
+    this.nameSpan.textContent = this.name;
+    // only create the edit and delete links if we don't already have them
+    if(!this.editLink) {
+      this.editLink = document.createElement('a');
+      this.editLink.classList.add(..."my-1".split(" "));
+      this.editLink.innerHTML = `<i class="fa fa-pencil-alt editTask p-4 cursor-pointer" data-todo-list-id="${this.id}"></i>`;
+      this.deleteLink = document.createElement('a');
+      this.deleteLink.classList.add(..."my-1".split(" "));
+      this.deleteLink.innerHTML = `<i class="fa fa-trash-alt deleteTask p-4 cursor-pointer" data-todo-list-id="${this.id}"></i>`;
+    }
+
+    this.element.append(this.completeLink, this.nameSpan, this.editLink, this.deleteLink);
+    return this.element;
   }
 }
 
@@ -302,6 +361,6 @@ class FlashMessage {
   toggleDisplay() {
     this.container().classList.toggle('opacity-0');
     this.container().classList.toggle(this.error ? 'bg-red-200' : 'bg-blue-200')
-    this.displayed = !this.displayed;
+    // this.displayed = !this.displayed;
   } 
 }
