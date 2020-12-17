@@ -35,7 +35,7 @@ class TodoList {
       .then(res => res.json())
       .then(todoListsJson => {
         this.collection = todoListsJson.map(tlAttributes => new TodoList(tlAttributes))
-        let listItems = lists.map(list => list.render())
+        let listItems = this.collection.map(list => list.render())
         this.list().append(...listItems)
         return this.collection
       })
