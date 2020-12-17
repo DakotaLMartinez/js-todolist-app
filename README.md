@@ -51,3 +51,5 @@ Making a mockup of what you want the project to look like is a good first step
 </body>
 </html>
 ```
+
+[Diagram of Event Listeners and requests](https://drive.google.com/file/d/1B9w4RsqJaqB_30fUcy8-qaRtzg5miV1x/view?usp=sharing)
