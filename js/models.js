@@ -5,9 +5,6 @@ class TodoList {
   constructor(attributes) {
     let whitelist = ["id", "name", "active"]
     whitelist.forEach(attr => this[attr] = attributes[attr])
-    // this["id"] = attributes["id"]
-    // this["name"] = attributes["name"]
-    // this["active"] = attributes["active"]
   }
   /*
   TodoList.container() returns a reference to this DOM node:
@@ -51,6 +48,41 @@ class TodoList {
   }
 
   /*
+  TodoList.create(formData) will make a fetch request to create a new Todo List in our database.
+  It will use a successful response to create a new Todo List client side and store it in this.collection.
+  It will also call render() on it to create the DOM element we'll use to represent it in our web page.
+  Finally it will add that DOM node to TodoList.container().
+  It will return a promise for the TodoList object that was created.
+  */
+  static create(formData) {
+    return fetch("http://localhost:3000/todo_lists", {
+      method: 'POST',
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({todo_list: formData})
+    })
+      .then(res => {
+        if(res.ok) {
+          return res.json() // returns a promise for body content parsed as JSON
+        } else {
+          return res.text().then(error => Promise.reject(error)) // return a reject promise so we skip the following then and go to catch
+        }
+      })
+      .then(todoListAttributes => {
+        let todoList = new TodoList(todoListAttributes);
+        this.collection.push(todoList);
+        this.container().appendChild(todoList.render());
+        new FlashMessage({type: 'success', message: 'New list added successfully'})
+        return todoList;
+      })
+      .catch(error => {
+        new FlashMessage({type: 'error', message: error});
+      })
+  }
+
+  /*
   todoList.render() will create an li element and assign it to this.element. It will then fill the element with contents 
   looking like the below html:
   <li class="my-2 px-4 bg-green-200 grid grid-cols-12 sm:grid-cols-6">
@@ -89,5 +121,35 @@ class Task {
 
   static container() {
     return this.c ||= document.querySelector("#tasks")
+  }
+}
+
+
+/*
+new FlashMessage({type: 'error', message: 'Name is required'})
+this will create the flash message and fade it in. It'll also trigger a fade out in 5 seconds.
+*/
+class FlashMessage {
+  constructor({type, message}) {
+    this.message = message;
+    // we want the color to be red if it's an error type and blue if it's not
+    this.color = type == "error" ? 'bg-red-200' : 'bg-blue-100';
+    this.render();
+  }
+
+  static container() {
+    return this.c ||= document.querySelector('#flash')
+  }
+
+  render() {
+    this.toggleMessage();
+    window.setTimeout(() => this.toggleMessage(), 5000);
+  }
+
+  toggleMessage() {
+    console.log(this);
+    FlashMessage.container().textContent = this.message;
+    FlashMessage.container().classList.toggle(this.color);
+    FlashMessage.container().classList.toggle('opacity-0');
   }
 }
