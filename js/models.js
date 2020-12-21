@@ -8,24 +8,12 @@ class TodoList {
   }
   /*
   TodoList.container() returns a reference to this DOM node:
-  <section id="todoListsContainer" class="px-4 bg-blue-100 min-h-screen rounded-md shadow">
-    <h1 class="text-2xl semibold border-b-4 border-blue">Todo Lists</h1>
-    <ul id="lists" class="list-none">
-
-    </ul>
-  </section>
-  */
-  static container() {
-    return this.c ||= document.querySelector("#todoListsContainer")
-  }
-  /*
-  TodoList.list() returns a reference to this DOM node:
   <ul id="lists" class="list-none">
 
   </ul>
   */
-  static list() {
-    return this.l ||= document.querySelector('#lists')
+  static container() {
+    return this.c ||= document.querySelector('#lists')
   }
 
   /*
@@ -39,7 +27,7 @@ class TodoList {
       .then(todoListsJson => {
         this.collection = todoListsJson.map(tlAttributes => new TodoList(tlAttributes))
         let listItems = this.collection.map(list => list.render())
-        this.list().append(...listItems)
+        this.container().append(...listItems)
         return this.collection
       })
   }
@@ -67,7 +55,7 @@ class TodoList {
       .then(json => {
         let todoList = new TodoList(json);
         this.collection.push(todoList);
-        this.list().appendChild(todoList.render());
+        this.container().appendChild(todoList.render());
         new FlashMessage({type: 'success', message: 'TodoList added successfully'})
         return todoList;
       })
