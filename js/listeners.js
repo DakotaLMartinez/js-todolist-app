@@ -34,6 +34,17 @@ document.addEventListener('submit', function(e) {
     };
     let list = TodoList.findById(target.dataset.todoListId);
     list.update({todo_list: formData});
-
+  } else if (target.matches('#newTask')) {
+    e.preventDefault();
+    if(!Task.active_todo_list_id) {
+      return new FlashMessage({type: 'error', message: 'Make sure to select a Todo List before creating a new task'})
+    }
+    let nameInput = target.querySelector('input[name="name"]');
+    let formData = {
+      name: nameInput.value,
+      todo_list_id: Task.active_todo_list_id
+    };
+    Task.create(formData)
+      .then(() => nameInput.value = "");
   }
 })

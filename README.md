@@ -1,3 +1,57 @@
+General approach to OO Design:
+
+```js
+class MyClass {
+  // decide what attributes to store/methods to call when creating a new instance
+  constructor(attributes) {
+
+  }
+  // DOM node where we're storing the elements representing instances
+  static container() {
+
+  }
+  /*
+  method to:
+  fetch data from backend
+  create and store instances from response
+  render them as dom nodes
+  and append them to the container
+  */
+  static all() {
+
+  } 
+  /*
+  method to:
+  send fetch request to create new instance
+  if response is ok, parse it as json
+  use the json data to build and store a new instance of the class client side
+  call render on the instance to create the DOM node that will represent it
+  append the rendered instance (this.element) to the container.
+  if the respose is not ok (validation error from backend) 
+  parse the resopnse as text 
+  take the text return a rejected promise for it
+  catch the rejected promise's error message and append it to the DOM somewhere (this is what we used FlashMessage for)
+  */
+  static create() {
+
+  }
+
+  /*
+  method creates the element only on first call, otherwise updates the existing element
+  create the DOM node we'll use to represent this instance in the page. 
+  Add all of its attributes and children and return it (doesn't insert to the DOM!!!)
+  render itself creates or refreshes the DOM node representing this instance in the HTML document.
+  Build the DOM elements in such a way that you'll be able to keep a reference to things that are 
+  going to change later so when we call render again, they'll be updated.
+  */
+  render() {
+    this.element ||= document.createElement('div');
+    // more cool stuff goes down here
+  }
+
+}
+```
+
 Making a mockup of what you want the project to look like is a good first step
 
 ```html
@@ -51,3 +105,29 @@ Making a mockup of what you want the project to look like is a good first step
 </body>
 </html>
 ```
+
+## New Task Submit
+
+## What event do we need to handle?
+submit event on `#newTaskForm`
+## What is the target element of that event?
+`form#newTaskForm`
+## What information do we need access to when the event happens? 
+the name of the task and the todo_list_id to which it will belong.
+## How and where do we ensure access to said information when the event occurs?
+We're storing the `active_todo_list_id` as a property of the Task class. It is set when a user clicks on
+a todolist from the left hand column.
+The name of the task will be the value of the `input[type="name"]` inside of `form#newTaskForm`
+## Which model method(s) are we invoking when this event happens?
+Task.create(formData)
+## If we need to invoke an instance method, how do we access the appropriate instance?
+N/A
+## Inside the model method, If we're sending a fetch request, how should our client side data change in response?
+We create the task via fetch to `/tasks` and with the response, add a task to this.collection[this.activeTodoListId]
+
+## If something goes wrong on the server side, how do we handle the error client side?
+Display a flash error message with the returned error.
+## Once the client side data has changed in response, how is the DOM affected? Are we inserting, removing or updating existing nodes?
+We insert a new rendered task li into the Task.container()
+## If inserting, where are we doing so? If removing, how do we identify the node(s) to be removed? If updating, how do we find the appropriate node and how do we update its contents when we do?
+The task goes at the end of the Task.container()

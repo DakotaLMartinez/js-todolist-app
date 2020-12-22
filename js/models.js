@@ -296,6 +296,45 @@ class Task {
   }
 
   /*
+  Task.create(formData) will: 
+  accept form data as an argument
+  make a fetch request with that formData to create the new task via the API 
+  check if the response is ok, and if it is
+  parse the response as a JSON formatted string and pass the parsed value to the next callback
+  take the js data structure in the next callback and use it to create a new instance of Task client side 
+  store the instance in this.collection
+  call render on the instance creating the node that will represent it in the DOM 
+  append the created instance to this.container() 
+  if the respose is not ok, we will parse it as text, consume that promise with a then callback which returns a rejected promise for the error from the API 
+  catch the error with another callback which uses it to create a new FlashMessage which will be displayed in section#flash
+  */
+  static create(formData) {
+    return fetch('http://localhost:3000/tasks', {
+      method: 'POST', 
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      },
+      body: JSON.stringify({task: formData})
+    })
+      .then(res => {
+        if (res.ok) {
+          return res.json();
+        } else {
+          return res.text().then(errors => Promise.reject(errors))
+        }
+      })
+      .then(taskAttributes => {
+        let task = new Task(taskAttributes);
+        this.collection[this.active_todo_list_id].push(task);
+        let rendered = task.render();
+        this.container().appendChild(rendered);
+        return task;
+      })
+      .catch(err => new FlashMessage({type: 'error', message: err}) )
+  }
+
+  /*
   <li class="my-2 px-4 bg-green-200 grid grid-cols-12">
     <a href="#" class="my-1 text-center"><i class="p-4 far fa-circle"></i></a>
     <span class="py-4 col-span-9">My First Task</span>
@@ -349,6 +388,5 @@ class FlashMessage {
   toggleDisplay() {
     this.container().classList.toggle('opacity-0');
     this.container().classList.toggle(this.error ? 'bg-red-200' : 'bg-blue-200')
-    // this.displayed = !this.displayed;
   } 
 }
