@@ -3,7 +3,12 @@ document.addEventListener('DOMContentLoaded', function(e) {
 })
 
 document.addEventListener('click', function(e) {
-  console.dir(e.target)
+  let target = e.target;
+
+  if(target.matches(".selectTodoList")) {
+    let todoList = TodoList.findById(target.dataset.todoListId)
+    todoList.show()
+  }
 })
 
 document.addEventListener('submit', function(e) {

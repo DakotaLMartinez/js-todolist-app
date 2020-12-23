@@ -46,6 +46,13 @@ class TodoList {
         return this.collection
       })
   }
+  
+  /*
+  TodoList.findById(id) => accepts an id as an argument and returns the todoList matching that id.
+  */
+  static findById(id) {
+    return this.collection.find(todoList => todoList.id == id);
+  }
 
   /*
   TodoList.create(formData) will make a fetch request to create a new Todo List in our database.
@@ -83,6 +90,51 @@ class TodoList {
   }
 
   /*
+  todoList.show() => {
+    fetch the /todo_lists/:id route to get the todolist and its associated tasks 
+    use the response to create task instances client side by invoking Task.loadByList(id, tasksAttributes)
+    take the previously selected active todolist and mark active: false.
+    mark the shown todoList as active: true (so it's got a darker background)
+  }
+  */
+  show() {
+    return fetch(`http://localhost:3000/todo_lists/${this.id}`, {
+      method: 'GET', 
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      }
+    })
+      .then(res => {
+        if(res.ok) {
+          return res.json() // returns a promise for body content parsed as JSON
+        } else {
+          return res.text().then(error => Promise.reject(error)) // return a reject promise so we skip the following then
+        }
+      })
+      .then(({id, tasksAttributes}) => {
+        console.log('inside callback')
+        Task.loadByList(id, tasksAttributes)
+        this.markActive()
+      })
+  }
+  /*
+  todoList.markActive() will set the active property on the previously active list to false, 
+  call render on it to update its background color
+  next, we'll set the current todolist to be the TodoList.activeList and set its active property to true 
+  finally, we'll call render on it again, so that it gets the darker background.
+  */
+  markActive() {
+    if(TodoList.activeList) {
+      TodoList.activeList.active = false;
+      TodoList.activeList.element.classList.replace('bg-green-400', 'bg-green-200');
+    }
+    TodoList.activeList = this;
+    this.active = true;
+    this.element.classList.replace('bg-green-200', 'bg-green-400');
+  }
+
+  /*
   todoList.render() will create an li element and assign it to this.element. It will then fill the element with contents 
   looking like the below html:
   <li class="my-2 px-4 bg-green-200 grid grid-cols-12 sm:grid-cols-6">
@@ -93,11 +145,12 @@ class TodoList {
   */
   render() {
     this.element ||= document.createElement('li');
-    this.element.classList.add(..."my-2 px-4 bg-green-200 grid grid-cols-12 sm:grid-cols-6".split(" "));
+    this.element.classList.add(...`my-2 px-4 bg-green-200 grid grid-cols-12 sm:grid-cols-6`.split(" "));
     
     this.nameLink ||= document.createElement('a');
-    this.nameLink.classList.add(..."py-4 col-span-10 sm:col-span-4".split(" "));
+    this.nameLink.classList.add(..."py-4 col-span-10 sm:col-span-4 selectTodoList".split(" "));
     this.nameLink.textContent = this.name;
+    this.nameLink.dataset.todoListId = this.id;
 
     this.editLink ||= document.createElement('a');
     this.editLink.classList.add(..."my-4 text-right".split(" "));
@@ -121,6 +174,64 @@ class Task {
 
   static container() {
     return this.c ||= document.querySelector("#tasks")
+  }
+  /*
+
+  */
+  static collection() {
+    return this.coll ||= {};
+  }
+
+  /*
+  static loadByList(id, tasksAttributes) => {
+    mark the id as active_todo_list_id (for when we handle form submission to add a new task later)
+    create task instances using tasksAttributes 
+    call render on each of the instances to build the associated DOM node
+    clear out the container() contents 
+    append the rendered instances to the container
+  }
+  */
+  static loadByList(id, tasksAttributes) {
+    Task.active_todo_list_id = id;
+    let tasks = tasksAttributes.map(taskAttributes => new Task(taskAttributes));
+    this.collection()[id] = tasks;
+    let rendered = tasks.map(task => task.render())
+    this.container().innerHTML = "";
+    debugger;
+    this.container().append(...rendered)
+  }
+
+  /*
+  <li class="my-2 px-4 bg-green-200 grid grid-cols-12">
+    <a href="#" class="my-1 text-center"><i class="p-4 far fa-circle"></i></a>
+    <span class="py-4 col-span-9">My First Task</span>
+    <a href="#" class="my-1 text-right"><i class="p-4 fa fa-pencil-alt"></i></a>
+    <a href="#" class="my-1 text-right"><i class="p-4 fa fa-trash-alt"></i></a>
+  </li>
+  */
+  render() {
+    this.element ||= document.createElement('li');
+    this.element.classList.add(..."my-2 px-4 bg-green-200 grid grid-cols-12".split(" "));
+
+    this.markCompleteLink ||= document.createElement('a');
+    this.markCompleteLink.classList.add(..."my-1 text-center".split(" "));
+    this.markCompleteLink.innerHTML = `<i class="p-4 far fa-circle"></i>`;
+
+    this.nameSpan ||= document.createElement('span');
+    this.nameSpan.classList.add(..."py-4 col-span-9".split(" "));
+    this.nameSpan.textContent = this.name; 
+
+    this.editLink ||= document.createElement('a');
+    this.editLink.classList.add(..."my-1 text-right".split(" "));
+    this.editLink.innerHTML = `<i class="p-4 fa fa-pencil-alt"></i>`;
+
+    this.deleteLink ||= document.createElement('a');
+    this.deleteLink.classList.add(..."my-1 text-right".split(" "));
+    this.deleteLink.innerHTML = `<i class="p-4 fa fa-trash-alt"></i>`;
+
+    this.element.append(this.markCompleteLink, this.nameSpan, this.editLink, this.deleteLink);
+
+    return this.element;
   }
 }
 

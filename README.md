@@ -61,3 +61,35 @@ Spread operator
 let arr1 = [1,2,3];
 let arr2 = [4,5,6];
 [...arr1, ...arr2]
+
+## What event do we need to handle?
+click event on the a tag for selecting a todo list.
+## What is the target element of that event?
+the nameLink of the todoList we're trying to select. We need to add a class to recognize the nameLink.
+## What information do we need access to when the event happens? 
+we need to access the todo_list_id
+## How and where do we ensure access to said information when the event occurs?
+we're going to need a data attribute on the target element so we can identify the id from the click.
+## Which model method(s) are we invoking when this event happens?
+TodoList.findById(id) => todoList instance matching the id passed as an argument
+todoList.show() => {
+  fetch the /todo_lists/:id route to get the todolist and its associated tasks 
+  use the response to create task instances client side by invoking Task.loadByList(id, tasksAttributes)
+  take the previously selected active todolist and mark active: false.
+  mark the shown todoList as active: true (so it's got a darker background)
+}
+Task.loadByList(id, tasksAttributes) => {
+  uses tasksAttributes to create task instances with those attributes 
+  store the instances in Task.collection 
+  call render on each to generate li elements we'll use to display the tasks 
+  append the tasks to the Task.container()
+}
+## If we need to invoke an instance method, how do we access the appropriate instance?
+we use TodoList.findById(id) to find the todoList
+## Inside the model method, If we're sending a fetch request, how should our client side data change in response?
+
+## If something goes wrong on the server side, how do we handle the error client side?
+
+## Once the client side data has changed in response, how is the DOM affected? Are we inserting, removing or updating existing nodes?
+
+## If inserting, where are we doing so? If removing, how do we identify the node(s) to be removed? If updating, how do we find the appropriate node and how do we update its contents when we do?
