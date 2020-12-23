@@ -261,7 +261,7 @@ class TodoList {
 
 class Task {
   constructor(attributes) {
-    let whitelist = ["id", "name", "todo_list_id", "complete", "notes"]
+    let whitelist = ["id", "name", "todo_list_id", "completed", "notes"]
     whitelist.forEach(attr => this[attr] = attributes[attr])
   }
   /*
@@ -278,6 +278,14 @@ class Task {
   */
   static all() {
     return this.collection ||= {};
+  }
+
+  /*
+  Task.findById(id) => returns a task within Task.all() at the key of the active_todo_list_id that matches the id 
+  */
+  static findById(id) {
+    let result = this.all()[Task.active_todo_list_id].find(task => task.id == id);
+    return result ? result : new FlashMessage({type: "error", message: "Task not found."})
   }
 
   /*
@@ -321,7 +329,7 @@ class Task {
         if (res.ok) {
           return res.json();
         } else {
-          return res.text().then(errors => Promise.reject(errors))
+          return res.text().then(errors => Promise.reject(errors));
         }
       })
       .then(taskAttributes => {
@@ -332,6 +340,40 @@ class Task {
         return task;
       })
       .catch(err => new FlashMessage({type: 'error', message: err}) )
+  }
+
+  /*
+  task.toggleComplete() will make a fetch request and update the complete attribute of the task 
+  it will then update the client side copy and call render on it to update the icon.
+  */
+  toggleComplete() {
+    console.log('toggleComplete')
+    return fetch(`http://localhost:3000/tasks/${this.id}`, {
+      method: 'PUT',
+      headers: { 
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      },
+      body: JSON.stringify({task: {completed: !this.completed }})
+    })
+      .then(res => {
+        if (res.ok) {
+          return res.json();
+        } else {
+          return res.text().then(errors => Promise.reject(errors));
+        }
+      })
+      .then(taskAttributes => {
+        Object.keys(taskAttributes).forEach(attr => this[attr] = taskAttributes[attr]);
+        this.render();
+      })
+  }
+
+  /*
+  task.completeIconClass() returns the class indicating whether the icon should be a checked circle or an empty one.
+  */
+  completeIconClass() {
+    return this.completed ? 'fa-check-circle' : 'fa-circle';
   }
 
   /*
@@ -346,9 +388,9 @@ class Task {
     this.element ||= document.createElement('li');
     this.element.classList.add(..."my-2 px-1 bg-green-200 grid grid-cols-12".split(" "));
 
-    this.completeLink = document.createElement('a');
+    this.completeLink ||= document.createElement('a');
     this.completeLink.classList.add(..."my-1 text-center".split(" "));
-    this.completeLink.innerHTML = `<i class="p-4 far fa-circle"></i>`
+    this.completeLink.innerHTML = `<i class="p-4 far ${this.completeIconClass()} toggleComplete" data-task-id="${this.id}"></i>`
 
     this.nameSpan ||= document.createElement('a');
     this.nameSpan.classList.add(..."py-4 col-span-9".split(" "));

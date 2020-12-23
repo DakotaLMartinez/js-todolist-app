@@ -13,6 +13,9 @@ document.addEventListener('click', function(e) {
   } else if (target.matches('.selectTodoList')) {
     let list = TodoList.findById(target.dataset.todoListId);
     list.show();
+  } else if (target.matches('.toggleComplete')) {
+    let task = Task.findById(target.dataset.taskId);
+    task.toggleComplete();
   }
 })
 

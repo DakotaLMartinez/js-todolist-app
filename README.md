@@ -131,3 +131,25 @@ Display a flash error message with the returned error.
 We insert a new rendered task li into the Task.container()
 ## If inserting, where are we doing so? If removing, how do we identify the node(s) to be removed? If updating, how do we find the appropriate node and how do we update its contents when we do?
 The task goes at the end of the Task.container()
+
+## What event do we need to handle?
+clicking on the circle by a task to toggle completeness.
+## What is the target element of that event?
+the .completeLink a tag associated with a Task instance's element.
+## What information do we need access to when the event happens? 
+we need access to the id of the task that we're updating and whether it is currently marked as complete.
+## How and where do we ensure access to said information when the event occurs?
+we'll add data attributes for both the id and a status attribute storing either complete or incomplete.
+## Which model method(s) are we invoking when this event happens?
+task.toggleComplete() => update the task status via fetch request and update the DOM in response.
+task.completeIconClass() => returns 'fa-check-circle' if the task is complete, 'fa-circle' if not.
+## If we need to invoke an instance method, how do we access the appropriate instance?
+we find the instance via the data-task-id attribute attached to the completeLink event target.
+## Inside the model method, If we're sending a fetch request, how should our client side data change in response?
+we'll update the client side copy of the task and then update the completeLink
+## If something goes wrong on the server side, how do we handle the error client side?
+We'll create a flash message with the error message and display it.
+## Once the client side data has changed in response, how is the DOM affected? Are we inserting, removing or updating existing nodes?
+we update the completeLink by calling `render()` on the task.
+## If inserting, where are we doing so? If removing, how do we identify the node(s) to be removed? If updating, how do we find the appropriate node and how do we update its contents when we do?
+we find the node by invoking element on the task object related to the click. Calling render on it will make sure the check is updated.
