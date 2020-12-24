@@ -19,6 +19,23 @@ document.addEventListener('submit', function(e) {
     target.querySelectorAll('input').forEach(function(input) {
       formData[input.name] = input.value;
     })
-    TodoList.create(formData);
+    TodoList.create(formData)
+      .then(() => {
+        target.querySelectorAll('input').forEach(function(input) {
+          input.value = "";
+        })
+      });
+  } else if(target.matches('#newTaskForm')) {
+    e.preventDefault();
+    let formData = {};
+    target.querySelectorAll('input').forEach(function(input) {
+      formData[input.name] = input.value;
+    });
+    Task.create(formData)
+      .then(() => {
+        target.querySelectorAll('input').forEach(function(input) {
+          input.value = "";
+        })
+      });
   }
 })

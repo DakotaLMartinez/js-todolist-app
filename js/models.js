@@ -113,9 +113,11 @@ class TodoList {
         }
       })
       .then(({id, tasksAttributes}) => {
-        console.log('inside callback')
         Task.loadByList(id, tasksAttributes)
         this.markActive()
+      })
+      .catch(err => {
+        return res.text().then(error => Promise.reject(err))
       })
   }
   /*
@@ -168,7 +170,7 @@ class TodoList {
 
 class Task {
   constructor(attributes) {
-    let whitelist = ["id", "name", "todo_list_id", "complete"]
+    let whitelist = ["id", "name", "todo_list_id", "completed"]
     whitelist.forEach(attr => this[attr] = attributes[attr])
   }
 
@@ -197,8 +199,49 @@ class Task {
     this.collection()[id] = tasks;
     let rendered = tasks.map(task => task.render())
     this.container().innerHTML = "";
-    debugger;
     this.container().append(...rendered)
+  }
+  /*
+  Task.create(formData) => {
+    will make a fetch request using the form data and active_todo_list_id to create a new task instance
+    if the response is ok, we'll parse it as JSON and return that 
+    we'll use the data we parsed to create a new task instance, store it render it and add it to DOM at container()
+    if the response is not OK we'll return a rejected promise for the error and catch it with a callback which will display it in a FlashMessage.
+  }
+  */
+  static create(formData) {
+    if(!Task.active_todo_list_id) {
+      return Promise.reject().catch(() => new FlashMessage({type: 'error', message: "Please select a todo list before adding a task"}));
+    } else {
+      formData.todo_list_id = Task.active_todo_list_id;
+    }
+    console.log(formData);
+    return fetch('http://localhost:3000/tasks',{
+      method: 'POST',
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        task: formData
+      })
+    })
+      .then(res => {
+        if(res.ok) {
+          return res.json() // returns a promise for body content parsed as JSON
+        } else {
+          return res.text().then(error => Promise.reject(error)) // return a reject promise so we skip the following then
+        }
+      })
+      .then(taskData => {
+        let task = new Task(taskData);
+        this.collection()[Task.active_todo_list_id].push(task);
+        this.container().append(task.render())
+        return task;
+      })
+      .catch(error => {
+        return new FlashMessage({type: 'error', message: error})
+      })
   }
 
   /*
@@ -258,7 +301,6 @@ class FlashMessage {
   }
 
   toggleMessage() {
-    console.log(this);
     FlashMessage.container().textContent = this.message;
     FlashMessage.container().classList.toggle(this.color);
     FlashMessage.container().classList.toggle('opacity-0');
