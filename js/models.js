@@ -347,7 +347,6 @@ class Task {
   it will then update the client side copy and call render on it to update the icon.
   */
   toggleComplete() {
-    console.log('toggleComplete')
     return fetch(`http://localhost:3000/tasks/${this.id}`, {
       method: 'PUT',
       headers: { 
@@ -367,6 +366,9 @@ class Task {
         Object.keys(taskAttributes).forEach(attr => this[attr] = taskAttributes[attr]);
         this.render();
       })
+      .catch(err => {
+        new FlashMessage({type: 'error', message: err.message});
+      })
   }
 
   /*
@@ -375,6 +377,55 @@ class Task {
   completeIconClass() {
     return this.completed ? 'fa-check-circle' : 'fa-circle';
   }
+
+  /*
+  task.edit() creates an edit task form element and adds it as modal content. Then calls Modal.toggle() to display it.
+  */
+  edit() {
+    Modal.populate({title: "Edit Task", content: this.editTaskForm()})
+    Modal.toggle();
+  }
+
+  editTaskForm() {
+    this.editForm ||= document.createElement('form');
+    this.editForm.classList.set("editTaskForm mt-4");
+
+    this.nameLabel ||= document.createElement('label');
+    this.nameLabel.classList.set('flex');
+    this.nameSpanEdit ||= document.createElement('span');
+    this.nameSpanEdit.textContent = "Name: ";
+    this.nameSpanEdit.classList.set("p-3")
+    this.nameLabel.append(this.nameSpanEdit);
+    this.nameInput ||= document.createElement('input');
+    this.nameInput.type = "text";
+    this.nameInput.value = this.name;
+    this.nameInput.name = 'name';
+    this.nameInput.classList.set("flex-1 p-3 bg-gray-200");
+
+    this.nameLabel.append(this.nameInput);
+
+    // this.completedLabel ||= document.createElement('label');
+    // this.completedLabel.setAttribute('for', 'completed');
+    // this.icon = document.createElement('i');
+    // this.icon.classList.set(`far text-3xl p-4 ${this.completeIconClass()}`)
+    // this.completedLabel.append(this.icon);
+
+    // this.completeCheckbox ||= document.createElement('input');
+    // this.completeCheckbox.type = "checkbox";
+    // this.completeCheckbox.id = 'completed';
+    // this.completeCheckbox.checked = this.completed;
+    // this.completeCheckbox.classList.set('hidden');
+
+    // this.completedLabel.append(this.completeCheckbox);
+
+    this.notesInput ||= document.createElement('textarea');
+    this.notesInput.textContent = this.notes;
+
+    this.editForm.append(this.nameLabel, this.notesInput);
+
+    return this.editForm;
+  }
+
 
   /*
   <li class="my-2 px-4 bg-green-200 grid grid-cols-12">
@@ -386,23 +437,23 @@ class Task {
   */
   render() {
     this.element ||= document.createElement('li');
-    this.element.classList.add(..."my-2 px-1 bg-green-200 grid grid-cols-12".split(" "));
+    this.element.classList.set("my-2 px-1 bg-green-200 grid grid-cols-12");
 
     this.completeLink ||= document.createElement('a');
-    this.completeLink.classList.add(..."my-1 text-center".split(" "));
+    this.completeLink.classList.set("my-1 text-center");
     this.completeLink.innerHTML = `<i class="p-4 far ${this.completeIconClass()} toggleComplete" data-task-id="${this.id}"></i>`
 
     this.nameSpan ||= document.createElement('a');
-    this.nameSpan.classList.add(..."py-4 col-span-9".split(" "));
+    this.nameSpan.classList.set("py-4 col-span-9");
     this.nameSpan.textContent = this.name;
     // only create the edit and delete links if we don't already have them
     if(!this.editLink) {
       this.editLink = document.createElement('a');
-      this.editLink.classList.add(..."my-1".split(" "));
-      this.editLink.innerHTML = `<i class="fa fa-pencil-alt editTask p-4 cursor-pointer" data-todo-list-id="${this.id}"></i>`;
+      this.editLink.classList.set("my-1");
+      this.editLink.innerHTML = `<i class="fa fa-pencil-alt editTask modal-open p-4 cursor-pointer" data-task-id="${this.id}"></i>`;
       this.deleteLink = document.createElement('a');
-      this.deleteLink.classList.add(..."my-1".split(" "));
-      this.deleteLink.innerHTML = `<i class="fa fa-trash-alt deleteTask p-4 cursor-pointer" data-todo-list-id="${this.id}"></i>`;
+      this.deleteLink.classList.set("my-1");
+      this.deleteLink.innerHTML = `<i class="fa fa-trash-alt deleteTask p-4 cursor-pointer" data-task-id="${this.id}"></i>`;
     }
 
     this.element.append(this.completeLink, this.nameSpan, this.editLink, this.deleteLink);
@@ -431,4 +482,130 @@ class FlashMessage {
     this.container().classList.toggle('opacity-0');
     this.container().classList.toggle(this.error ? 'bg-red-200' : 'bg-blue-200')
   } 
+}
+
+class Modal {
+
+  static init() {
+    document.body.appendChild(Modal.render());
+  }
+
+  static populate({title, content}) {
+    Modal.title = title;
+    Modal.content = content;
+    Modal.render();
+  }
+
+  static toggle() {
+    document.body.classList.toggle('modal-active');
+    this.element.classList.toggle('opacity-0');
+    this.element.classList.toggle('pointer-events-none');
+  }
+
+  /*
+  <div class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center">
+    <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div>
+    
+    <div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded shadow-lg z-50 overflow-y-auto"> // this.modalContainer
+      
+      // this.modalClose
+      <div class="modal-close absolute top-0 right-0 cursor-pointer flex flex-col items-center mt-4 mr-4 text-white text-sm z-50">
+        <svg class="fill-current text-white" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18">
+          <path d="M14.53 4.53l-1.06-1.06L9 7.94 4.53 3.47 3.47 4.53 7.94 9l-4.47 4.47 1.06 1.06L9 10.06l4.47 4.47 1.06-1.06L10.06 9z"></path>
+        </svg>
+        <span class="text-sm">(Esc)</span>
+      </div>
+
+      // this.modalContent
+      <!-- Add margin if you want to see some of the overlay behind the modal-->
+      <div class="modal-content py-4 text-left px-6">
+        <!--Title-->
+        <div class="flex justify-between items-center pb-3"> // this.modalContentHeader.append(this.header, this.modalCloseInContent)
+          <p class="text-2xl font-bold">Simple Modal!</p> // this.header
+          <div class="modal-close cursor-pointer z-50"> // this.modalCloseInContent
+            <svg class="fill-current text-black" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18">
+              <path d="M14.53 4.53l-1.06-1.06L9 7.94 4.53 3.47 3.47 4.53 7.94 9l-4.47 4.47 1.06 1.06L9 10.06l4.47 4.47 1.06-1.06L10.06 9z"></path>
+            </svg>
+          </div>
+        </div>
+
+        <!--Body-->
+        <p>Modal content can go here</p>
+        <p>...</p>
+        <p>...</p>
+        <p>...</p>
+        <p>...</p>
+
+        <!--Footer-->
+        <div class="flex justify-end pt-2"> // this.footer
+          <button class="px-4 bg-transparent p-3 rounded-lg text-indigo-500 hover:bg-gray-100 hover:text-indigo-400 mr-2">Action</button>
+          <button class="modal-close px-4 bg-indigo-500 p-3 rounded-lg text-white hover:bg-indigo-400">Close</button>
+        </div>
+        
+      </div>
+    </div>
+  </div>
+  */
+  static render() {
+    this.element ||= document.createElement('div');
+    this.element.classList.set("modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center");
+
+    this.overlay ||= document.createElement('div');
+    this.overlay.classList.set("modal-overlay absolute w-full h-full bg-gray-900 opacity-50");
+    
+    this.modalContainer ||= document.createElement('div');
+    this.modalContainer.classList.set("modal-container bg-white w-11/12 md:max-w-md mx-auto rounded shadow-lg z-50 overflow-y-auto");
+
+    this.modalClose ||= document.createElement('div');
+    this.modalClose.classList.set("modal-close absolute top-0 right-0 cursor-pointer flex flex-col items-center mt-4 mr-4 text-white text-sm z-50");
+    this.modalClose.innerHTML = `
+      <svg class="modal-close fill-current text-white" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18">
+        <path d="M14.53 4.53l-1.06-1.06L9 7.94 4.53 3.47 3.47 4.53 7.94 9l-4.47 4.47 1.06 1.06L9 10.06l4.47 4.47 1.06-1.06L10.06 9z"></path>
+      </svg>
+      <span class="modal-close text-sm">(Esc)</span>
+    `;
+
+    this.modalContent ||= document.createElement('div');
+    this.modalContent.classList.set("modal-content py-4 text-left px-6");
+
+    this.modalContentHeader ||= document.createElement('div');
+    this.modalContentHeader.classList.set("flex justify-between items-center pb-3");
+
+    this.header ||= document.createElement('p');
+    this.header.classList.set("text-2xl font-bold");
+    this.header.textContent = this.title;
+
+    this.modalCloseInContent ||= document.createElement('div');
+    this.modalCloseInContent.classList.set("modal-close cursor-pointer z-50")
+    this.modalCloseInContent.innerHTML = `
+      <svg class="modal-close fill-current text-black" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18">
+        <path d="M14.53 4.53l-1.06-1.06L9 7.94 4.53 3.47 3.47 4.53 7.94 9l-4.47 4.47 1.06 1.06L9 10.06l4.47 4.47 1.06-1.06L10.06 9z"></path>
+      </svg>
+    `;
+    this.modalContentHeader.append(this.header, this.modalCloseInContent);
+
+    this.footer ||= document.createElement('div');
+    this.footer.classList.set("flex justify-end pt-2");
+
+    this.actionButton ||= document.createElement('button');
+    this.actionButton.classList.add(..."px-4 bg-transparent p-3 rounded-lg text-indigo-500 hover:bg-gray-100 hover:text-indigo-400 mr-2".split(" "));
+    this.actionButton.textContent = this.actionButtonText;
+    this.closeButton ||= document.createElement('button');
+    this.closeButton.classList.add(..."modal-close px-4 bg-indigo-500 p-3 rounded-lg text-white hover:bg-indigo-400".split(" "));
+    this.closeButton.textContent = "Close"
+
+    this.footer.append(this.actionButton, this.closeButton);
+
+    this.contentDiv ||= document.createElement('div');
+    if(this.content) { 
+      this.contentDiv.append(this.content);
+    }
+    this.modalContent.append(this.modalContentHeader, this.contentDiv, this.footer);
+
+    this.modalContainer.append(this.modalClose, this.modalContent, this.footer);
+
+    this.element.append(this.overlay, this.modalContainer);
+    
+    return this.element;
+  }
 }

@@ -1,5 +1,6 @@
 document.addEventListener('DOMContentLoaded', function(e) {
-  TodoList.all()
+  TodoList.all();
+  Modal.init();
 })
 document.addEventListener('click', function(e) {
   console.dir(e.target)
@@ -16,6 +17,14 @@ document.addEventListener('click', function(e) {
   } else if (target.matches('.toggleComplete')) {
     let task = Task.findById(target.dataset.taskId);
     task.toggleComplete();
+  } else if (target.matches('.editTask')) {
+    let task = Task.findById(target.dataset.taskId);
+    console.log(task);
+    task.edit();
+
+  } else if(e.target.matches('.modal-overlay') || e.target.matches('.modal-close')) {
+    e.preventDefault();
+    Modal.toggle();
   }
 })
 
@@ -49,5 +58,18 @@ document.addEventListener('submit', function(e) {
     };
     Task.create(formData)
       .then(() => nameInput.value = "");
+  }
+})
+
+document.addEventListener('keydown', (e) => {
+  e = e || window.event;
+  let isEscape = false;
+  if("key" in e) {
+    isEscape = (e.key === "Escape" || e.key === "Esc")
+  } else {
+    isEscape = (e.keyCode === 27)
+  }
+  if(isEscape && document.body.classList.contains('modal-active')) {
+    Modal.toggle();
   }
 })

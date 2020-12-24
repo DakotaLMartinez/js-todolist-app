@@ -153,3 +153,19 @@ We'll create a flash message with the error message and display it.
 we update the completeLink by calling `render()` on the task.
 ## If inserting, where are we doing so? If removing, how do we identify the node(s) to be removed? If updating, how do we find the appropriate node and how do we update its contents when we do?
 we find the node by invoking element on the task object related to the click. Calling render on it will make sure the check is updated.
+
+After writing a bunch of code like this:
+
+```js
+this.actionButton.classList.add(..."px-4 bg-transparent p-3 rounded-lg text-indigo-500 hover:bg-gray-100 hover:text-indigo-400 mr-2".split(" "));
+```
+When building up javascript elements with lots of classes from html, I finally wised up and made a change:
+
+```js
+DOMTokenList.prototype.set = function(classString) {
+  this.add(...classString.split(" "));
+}
+// now I can do this:
+this.actionButton.classList.set("px-4 bg-transparent p-3 rounded-lg text-indigo-500 hover:bg-gray-100 hover:text-indigo-400 mr-2")
+```
+
