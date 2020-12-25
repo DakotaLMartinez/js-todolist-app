@@ -185,6 +185,13 @@ class Task {
   }
 
   /*
+  Task.findById(id) => accepts an id as an argument and returns the task matching that id.
+  */
+ static findById(id) {
+  return this.collection()[Task.active_todo_list_id].find(task => task.id == id);
+  }
+
+  /*
   static loadByList(id, tasksAttributes) => {
     mark the id as active_todo_list_id (for when we handle form submission to add a new task later)
     create task instances using tasksAttributes 
@@ -245,6 +252,41 @@ class Task {
   }
 
   /*
+  task.toggleComplete() will send a fetch request to update the task with a completed attribute 
+  opposite to its current state. It will take a successful response and use it to update the task object stored client side and update the DOM by invoking render on the updated task.
+  */
+  toggleComplete() {
+    fetch(`http://localhost:3000/tasks/${this.id}`, {
+      method: 'PUT', 
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      }, 
+      body: JSON.stringify({
+        task: { completed: !this.completed }
+      })
+    })
+      .then(res => {
+        if(res.ok) {
+          return res.json() // returns a promise for body content parsed as JSON
+        } else {
+          return res.text().then(error => Promise.reject(error)) // return a reject promise so we skip the following then
+        }
+      })
+      .then(taskAttributes => {
+        Object.keys(taskAttributes).forEach(attr => this[attr] = taskAttributes[attr]);
+        this.render();
+      })
+      .catch(error => {
+        return new FlashMessage({type: 'error', message: error});
+      })
+  }
+
+  completeIconClass() {
+    return this.completed ? 'fa-check-circle' : 'fa-circle';
+  }
+
+  /*
   <li class="my-2 px-4 bg-green-200 grid grid-cols-12">
     <a href="#" class="my-1 text-center"><i class="p-4 far fa-circle"></i></a>
     <span class="py-4 col-span-9">My First Task</span>
@@ -258,7 +300,7 @@ class Task {
 
     this.markCompleteLink ||= document.createElement('a');
     this.markCompleteLink.classList.add(..."my-1 text-center".split(" "));
-    this.markCompleteLink.innerHTML = `<i class="p-4 far fa-circle"></i>`;
+    this.markCompleteLink.innerHTML = `<i class="toggleComplete p-4 far ${this.completeIconClass()}" data-task-id="${this.id}"></i>`;
 
     this.nameSpan ||= document.createElement('span');
     this.nameSpan.classList.add(..."py-4 col-span-9".split(" "));

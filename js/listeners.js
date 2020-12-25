@@ -6,8 +6,11 @@ document.addEventListener('click', function(e) {
   let target = e.target;
 
   if(target.matches(".selectTodoList")) {
-    let todoList = TodoList.findById(target.dataset.todoListId)
-    todoList.show()
+    let todoList = TodoList.findById(target.dataset.todoListId);
+    todoList.show();
+  } else if(target.matches(".toggleComplete")) {
+    let task = Task.findById(target.dataset.taskId);
+    task.toggleComplete();
   }
 })
 
