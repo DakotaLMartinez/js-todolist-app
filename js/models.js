@@ -137,6 +137,40 @@ class TodoList {
   }
 
   /*
+  todoList.delete => {
+    send fetch request to delete todoList with matching id 
+    upon successful response, remove the task from this.collection
+    and remove the li from the dom by calling this.element.remove()
+    also replace contents of the Task.container if we're deleting the active todo list
+  }
+  */
+ delete() {
+  return fetch(`http://localhost:3000/todo_lists/${this.id}`, {
+    method: "DELETE",
+    headers: {
+      "Accept": "application/json", 
+      "Content-Type": "application/json"
+    }
+  })
+    .then(res => {
+      if(res.ok) {
+        return res.json() // returns a promise for body content parsed as JSON
+      } else {
+        return res.text().then(error => Promise.reject(error)) // return a reject promise so we skip the following then
+      }
+    })
+    .then(({id}) => {
+      let index = TodoList.collection.findIndex(task => task.id == id)
+      TodoList.collection.splice(index, 1);
+      this.element.remove();
+      if(id == Task.active_todo_list_id) {
+        Task.container().innerHTML = `<li class="my-2 p-4">Select a Todo List to see tasks</li>`
+      }
+      return this;
+    })
+    .catch(error => new FlashMessage({type: 'error', message: error}))
+}
+  /*
   todoList.render() will create an li element and assign it to this.element. It will then fill the element with contents 
   looking like the below html:
   <li class="my-2 px-4 bg-green-200 grid grid-cols-12 sm:grid-cols-6">
@@ -160,7 +194,7 @@ class TodoList {
 
     this.deleteLink ||= document.createElement('a');
     this.deleteLink.classList.add(..."my-4 text-right".split(" "));
-    this.deleteLink.innerHTML = `<i class="fa fa-trash-alt"></i>`;
+    this.deleteLink.innerHTML = `<i class="deleteTodoList fa fa-trash-alt" data-todo-list-id="${this.id}"></i>`;
 
     this.element.append(this.nameLink, this.editLink, this.deleteLink);
 
@@ -187,8 +221,8 @@ class Task {
   /*
   Task.findById(id) => accepts an id as an argument and returns the task matching that id.
   */
- static findById(id) {
-  return this.collection()[Task.active_todo_list_id].find(task => task.id == id);
+  static findById(id) {
+    return this.collection()[Task.active_todo_list_id].find(task => task.id == id);
   }
 
   /*
@@ -222,7 +256,6 @@ class Task {
     } else {
       formData.todo_list_id = Task.active_todo_list_id;
     }
-    console.log(formData);
     return fetch('http://localhost:3000/tasks',{
       method: 'POST',
       headers: {
@@ -246,9 +279,7 @@ class Task {
         this.container().append(task.render())
         return task;
       })
-      .catch(error => {
-        return new FlashMessage({type: 'error', message: error})
-      })
+      .catch(error => new FlashMessage({type: 'error', message: error}))
   }
 
   /*
@@ -277,13 +308,42 @@ class Task {
         Object.keys(taskAttributes).forEach(attr => this[attr] = taskAttributes[attr]);
         this.render();
       })
-      .catch(error => {
-        return new FlashMessage({type: 'error', message: error});
-      })
+      .catch(error => new FlashMessage({type: 'error', message: error}))
   }
 
   completeIconClass() {
     return this.completed ? 'fa-check-circle' : 'fa-circle';
+  }
+
+  /*
+  task.delete => {
+    send fetch request to delete task with matching id 
+    upon successful response, remove the task from this.collection()
+    and remove the li from the dom by calling this.element.remove()
+  }
+  */
+  delete() {
+    return fetch(`http://localhost:3000/tasks/${this.id}`, {
+      method: "DELETE",
+      headers: {
+        "Accept": "application/json", 
+        "Content-Type": "application/json"
+      }
+    })
+      .then(res => {
+        if(res.ok) {
+          return res.json() // returns a promise for body content parsed as JSON
+        } else {
+          return res.text().then(error => Promise.reject(error)) // return a reject promise so we skip the following then
+        }
+      })
+      .then(({id}) => {
+        let index = Task.collection()[Task.active_todo_list_id].findIndex(task => task.id == id)
+        Task.collection()[Task.active_todo_list_id].splice(index, 1);
+        this.element.remove();
+        return this;
+      })
+      .catch(error => new FlashMessage({type: 'error', message: error}))
   }
 
   /*
@@ -312,7 +372,7 @@ class Task {
 
     this.deleteLink ||= document.createElement('a');
     this.deleteLink.classList.add(..."my-1 text-right".split(" "));
-    this.deleteLink.innerHTML = `<i class="p-4 fa fa-trash-alt"></i>`;
+    this.deleteLink.innerHTML = `<i class="deleteTask p-4 fa fa-trash-alt" data-task-id="${this.id}"></i>`;
 
     this.element.append(this.markCompleteLink, this.nameSpan, this.editLink, this.deleteLink);
 

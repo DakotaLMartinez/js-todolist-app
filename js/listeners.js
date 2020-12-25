@@ -8,9 +8,19 @@ document.addEventListener('click', function(e) {
   if(target.matches(".selectTodoList")) {
     let todoList = TodoList.findById(target.dataset.todoListId);
     todoList.show();
+  } else if(target.matches(".deleteTodoList")) {
+    if(confirm("Are you sure you want to delete this todo list?")) {
+      let todoList = TodoList.findById(target.dataset.todoListId);
+      todoList.delete();
+    }
   } else if(target.matches(".toggleComplete")) {
     let task = Task.findById(target.dataset.taskId);
     task.toggleComplete();
+  } else if(target.matches(".deleteTask")) {
+    if(confirm("Are you sure you want to delete this task?")) {
+      let task = Task.findById(target.dataset.taskId);
+      task.delete();
+    }
   }
 })
 
