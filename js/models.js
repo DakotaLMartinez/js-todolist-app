@@ -404,19 +404,6 @@ class Task {
 
     this.nameLabel.append(this.nameInput);
 
-    // this.completedLabel ||= document.createElement('label');
-    // this.completedLabel.setAttribute('for', 'completed');
-    // this.icon = document.createElement('i');
-    // this.icon.classList.set(`far text-3xl p-4 ${this.completeIconClass()}`)
-    // this.completedLabel.append(this.icon);
-
-    // this.completeCheckbox ||= document.createElement('input');
-    // this.completeCheckbox.type = "checkbox";
-    // this.completeCheckbox.id = 'completed';
-    // this.completeCheckbox.checked = this.completed;
-    // this.completeCheckbox.classList.set('hidden');
-
-    // this.completedLabel.append(this.completeCheckbox);
     this.notesLabel ||= document.createElement('label');
     this.notesLabel.classList.set('flex flex-col');
     this.notesSpanEdit ||= document.createElement('span');
@@ -433,7 +420,6 @@ class Task {
     this.saveTaskButton.classList.set('w-full bg-green-400 my-4 py-3 uppercase font-bold hover:bg-green-500 transition duration-500');
     this.saveTaskButton.type = "submit";
     this.saveTaskButton.textContent = "Save Task";
-
 
     this.editForm.append(this.nameLabel, this.notesLabel, this.saveTaskButton);
 
