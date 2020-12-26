@@ -391,16 +391,16 @@ class Task {
     this.editForm.classList.set("editTaskForm mt-4");
 
     this.nameLabel ||= document.createElement('label');
-    this.nameLabel.classList.set('flex');
+    this.nameLabel.classList.set('flex flex-col');
     this.nameSpanEdit ||= document.createElement('span');
-    this.nameSpanEdit.textContent = "Name: ";
-    this.nameSpanEdit.classList.set("p-3")
+    this.nameSpanEdit.textContent = "Name";
+    this.nameSpanEdit.classList.set("uppercase semibold my-2")
     this.nameLabel.append(this.nameSpanEdit);
     this.nameInput ||= document.createElement('input');
     this.nameInput.type = "text";
     this.nameInput.value = this.name;
     this.nameInput.name = 'name';
-    this.nameInput.classList.set("flex-1 p-3 bg-gray-200");
+    this.nameInput.classList.set("flex-1 p-3 bg-gray-200 rounded focus:outline-none focus:shadow-outline focus:border-blue-300");
 
     this.nameLabel.append(this.nameInput);
 
@@ -417,11 +417,25 @@ class Task {
     // this.completeCheckbox.classList.set('hidden');
 
     // this.completedLabel.append(this.completeCheckbox);
-
+    this.notesLabel ||= document.createElement('label');
+    this.notesLabel.classList.set('flex flex-col');
+    this.notesSpanEdit ||= document.createElement('span');
+    this.notesSpanEdit.textContent = "notes";
+    this.notesSpanEdit.classList.set("uppercase semibold my-2")
+    this.notesLabel.append(this.notesSpanEdit);
     this.notesInput ||= document.createElement('textarea');
+    this.notesInput.classList.set('flex-1 p-3 mb-2 bg-gray-200 min-h-12 rounded focus:outline-none focus:shadow-outline focus:border-blue-300 resize-y');
+    this.notesInput.rows = 4;
     this.notesInput.textContent = this.notes;
+    this.notesLabel.append(this.notesInput);
 
-    this.editForm.append(this.nameLabel, this.notesInput);
+    this.saveTaskButton ||= document.createElement('button');
+    this.saveTaskButton.classList.set('w-full bg-green-400 my-4 py-3 uppercase font-bold hover:bg-green-500 transition duration-500');
+    this.saveTaskButton.type = "submit";
+    this.saveTaskButton.textContent = "Save Task";
+
+
+    this.editForm.append(this.nameLabel, this.notesLabel, this.saveTaskButton);
 
     return this.editForm;
   }
@@ -487,13 +501,15 @@ class FlashMessage {
 class Modal {
 
   static init() {
-    document.body.appendChild(Modal.render());
+    this.element = document.querySelector(".modal")
+    this.title = document.querySelector("#modal-title");
+    this.content = document.querySelector("#modal-content");
   }
 
   static populate({title, content}) {
-    Modal.title = title;
-    Modal.content = content;
-    Modal.render();
+    Modal.title.innerText = title;
+    Modal.content.innerHTML = '';
+    Modal.content.append(content);
   }
 
   static toggle() {
@@ -502,110 +518,4 @@ class Modal {
     this.element.classList.toggle('pointer-events-none');
   }
 
-  /*
-  <div class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center">
-    <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div>
-    
-    <div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded shadow-lg z-50 overflow-y-auto"> // this.modalContainer
-      
-      // this.modalClose
-      <div class="modal-close absolute top-0 right-0 cursor-pointer flex flex-col items-center mt-4 mr-4 text-white text-sm z-50">
-        <svg class="fill-current text-white" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18">
-          <path d="M14.53 4.53l-1.06-1.06L9 7.94 4.53 3.47 3.47 4.53 7.94 9l-4.47 4.47 1.06 1.06L9 10.06l4.47 4.47 1.06-1.06L10.06 9z"></path>
-        </svg>
-        <span class="text-sm">(Esc)</span>
-      </div>
-
-      // this.modalContent
-      <!-- Add margin if you want to see some of the overlay behind the modal-->
-      <div class="modal-content py-4 text-left px-6">
-        <!--Title-->
-        <div class="flex justify-between items-center pb-3"> // this.modalContentHeader.append(this.header, this.modalCloseInContent)
-          <p class="text-2xl font-bold">Simple Modal!</p> // this.header
-          <div class="modal-close cursor-pointer z-50"> // this.modalCloseInContent
-            <svg class="fill-current text-black" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18">
-              <path d="M14.53 4.53l-1.06-1.06L9 7.94 4.53 3.47 3.47 4.53 7.94 9l-4.47 4.47 1.06 1.06L9 10.06l4.47 4.47 1.06-1.06L10.06 9z"></path>
-            </svg>
-          </div>
-        </div>
-
-        <!--Body-->
-        <p>Modal content can go here</p>
-        <p>...</p>
-        <p>...</p>
-        <p>...</p>
-        <p>...</p>
-
-        <!--Footer-->
-        <div class="flex justify-end pt-2"> // this.footer
-          <button class="px-4 bg-transparent p-3 rounded-lg text-indigo-500 hover:bg-gray-100 hover:text-indigo-400 mr-2">Action</button>
-          <button class="modal-close px-4 bg-indigo-500 p-3 rounded-lg text-white hover:bg-indigo-400">Close</button>
-        </div>
-        
-      </div>
-    </div>
-  </div>
-  */
-  static render() {
-    this.element ||= document.createElement('div');
-    this.element.classList.set("modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center");
-
-    this.overlay ||= document.createElement('div');
-    this.overlay.classList.set("modal-overlay absolute w-full h-full bg-gray-900 opacity-50");
-    
-    this.modalContainer ||= document.createElement('div');
-    this.modalContainer.classList.set("modal-container bg-white w-11/12 md:max-w-md mx-auto rounded shadow-lg z-50 overflow-y-auto");
-
-    this.modalClose ||= document.createElement('div');
-    this.modalClose.classList.set("modal-close absolute top-0 right-0 cursor-pointer flex flex-col items-center mt-4 mr-4 text-white text-sm z-50");
-    this.modalClose.innerHTML = `
-      <svg class="modal-close fill-current text-white" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18">
-        <path d="M14.53 4.53l-1.06-1.06L9 7.94 4.53 3.47 3.47 4.53 7.94 9l-4.47 4.47 1.06 1.06L9 10.06l4.47 4.47 1.06-1.06L10.06 9z"></path>
-      </svg>
-      <span class="modal-close text-sm">(Esc)</span>
-    `;
-
-    this.modalContent ||= document.createElement('div');
-    this.modalContent.classList.set("modal-content py-4 text-left px-6");
-
-    this.modalContentHeader ||= document.createElement('div');
-    this.modalContentHeader.classList.set("flex justify-between items-center pb-3");
-
-    this.header ||= document.createElement('p');
-    this.header.classList.set("text-2xl font-bold");
-    this.header.textContent = this.title;
-
-    this.modalCloseInContent ||= document.createElement('div');
-    this.modalCloseInContent.classList.set("modal-close cursor-pointer z-50")
-    this.modalCloseInContent.innerHTML = `
-      <svg class="modal-close fill-current text-black" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18">
-        <path d="M14.53 4.53l-1.06-1.06L9 7.94 4.53 3.47 3.47 4.53 7.94 9l-4.47 4.47 1.06 1.06L9 10.06l4.47 4.47 1.06-1.06L10.06 9z"></path>
-      </svg>
-    `;
-    this.modalContentHeader.append(this.header, this.modalCloseInContent);
-
-    this.footer ||= document.createElement('div');
-    this.footer.classList.set("flex justify-end pt-2");
-
-    this.actionButton ||= document.createElement('button');
-    this.actionButton.classList.add(..."px-4 bg-transparent p-3 rounded-lg text-indigo-500 hover:bg-gray-100 hover:text-indigo-400 mr-2".split(" "));
-    this.actionButton.textContent = this.actionButtonText;
-    this.closeButton ||= document.createElement('button');
-    this.closeButton.classList.add(..."modal-close px-4 bg-indigo-500 p-3 rounded-lg text-white hover:bg-indigo-400".split(" "));
-    this.closeButton.textContent = "Close"
-
-    this.footer.append(this.actionButton, this.closeButton);
-
-    this.contentDiv ||= document.createElement('div');
-    if(this.content) { 
-      this.contentDiv.append(this.content);
-    }
-    this.modalContent.append(this.modalContentHeader, this.contentDiv, this.footer);
-
-    this.modalContainer.append(this.modalClose, this.modalContent, this.footer);
-
-    this.element.append(this.overlay, this.modalContainer);
-    
-    return this.element;
-  }
 }
