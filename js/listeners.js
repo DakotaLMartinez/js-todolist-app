@@ -20,6 +20,9 @@ document.addEventListener('click', function(e) {
   } else if (target.matches('.editTask')) {
     let task = Task.findById(target.dataset.taskId);
     task.edit();
+  } else if (target.matches('.deleteTask')) {
+    let task = Task.findById(target.dataset.taskId);
+    task.delete();
   } else if(e.target.matches('.modal-overlay') || e.target.matches('.modal-close')) {
     e.preventDefault();
     Modal.toggle();

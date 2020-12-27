@@ -205,6 +205,7 @@ class TodoList {
           let index = TodoList.collection.findIndex(list => list.id == json.id);
           TodoList.collection.splice(index, 1);
           this.element.remove();
+          new FlashMessage({type: 'success', message: 'Todo List deleted successfully'})
         })
         .catch(error => {
           new FlashMessage({type: 'error', message: error});
@@ -469,6 +470,35 @@ class Task {
       })
   }
 
+  delete() {
+    let proceed = confirm("Are you sure you want to delete this task?");
+    if(proceed) {
+      return fetch(`http://localhost:3000/tasks/${this.id}`, {
+        method: 'DELETE',
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        }
+      })
+        .then(res => {
+          if(res.ok) {
+            return res.json()
+          } else {
+            return res.text().then(errors => Promise.reject(errors))
+          }
+        })
+        .then(json => {
+          //update this object with the json response
+          let index = Task.collection[Task.active_todo_list_id].findIndex(task => task.id == json.id);
+          Task.collection[Task.active_todo_list_id].splice(index, 1);
+          this.element.remove();
+          new FlashMessage({type: 'success', message: 'Task deleted successfully'})
+        })
+        .catch(error => {
+          new FlashMessage({type: 'error', message: error});
+        })
+    }
+  }
 
   /*
   <li class="my-2 px-4 bg-green-200 grid grid-cols-12">
