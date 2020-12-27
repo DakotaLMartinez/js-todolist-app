@@ -43,7 +43,7 @@ class TodoList {
         "Content-Type": "application/json",
         "Accept": "application/json"
       },
-      body: JSON.stringify(formData)
+      body: JSON.stringify({todo_list: formData})
     })
       .then(res => {
         if(res.ok) {
@@ -159,7 +159,7 @@ class TodoList {
         "Content-Type": "application/json",
         "Accept": "application/json"
       },
-      body: JSON.stringify(formData)
+      body: JSON.stringify({todo_list: formData})
     })
       .then(res => {
         if(res.ok) {
@@ -317,6 +317,7 @@ class Task {
   catch the error with another callback which uses it to create a new FlashMessage which will be displayed in section#flash
   */
   static create(formData) {
+    formData.todo_list_id = Task.active_todo_list_id;
     return fetch('http://localhost:3000/tasks', {
       method: 'POST', 
       headers: {
@@ -389,6 +390,7 @@ class Task {
   editTaskForm() {
     this.editForm ||= document.createElement('form');
     this.editForm.classList.set("editTaskForm mt-4");
+    this.editForm.dataset.taskId = this.id;
 
     this.nameLabel ||= document.createElement('label');
     this.nameLabel.classList.set('flex flex-col');
@@ -414,6 +416,7 @@ class Task {
     this.notesInput.classList.set('flex-1 p-3 mb-2 bg-gray-200 min-h-12 rounded focus:outline-none focus:shadow-outline focus:border-blue-300 resize-y');
     this.notesInput.rows = 4;
     this.notesInput.textContent = this.notes;
+    this.notesInput.name="notes";
     this.notesLabel.append(this.notesInput);
 
     this.saveTaskButton ||= document.createElement('button');
@@ -424,6 +427,46 @@ class Task {
     this.editForm.append(this.nameLabel, this.notesLabel, this.saveTaskButton);
 
     return this.editForm;
+  }
+
+  /*
+  task.update(formData) will make a fetch request to update the task via our API, 
+  we'll take the succesful response and use it to update the DOM with the new name.
+  We'll toggle (hide) the modal in response to the form submission. 
+  We'll also show a successful flash message at the top. If something goes wrong, we'll hold off 
+  on removing the form and instead raise a flash error message at the top allowing the 
+  user to try again.
+  */
+  update(formData) {
+    return fetch(`http://localhost:3000/tasks/${this.id}`, {
+      method: 'PUT',
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      },
+      body: JSON.stringify({task: formData})
+    })
+      .then(res => {
+        if(res.ok) {
+          return res.json()
+        } else {
+          return res.text().then(errors => Promise.reject(errors))
+        }
+      })
+      .then(json => {
+        //update this object with the json response
+        Object.keys(json).forEach((key) => this[key] = json[key])
+        // remove the form
+        this.editForm.remove();
+        // add the nameLink edit and delete links in again.
+        this.render();
+        Modal.toggle();
+        new FlashMessage({type: 'success', message: 'Task updated successfully'})
+        return todoList;
+      })
+      .catch(error => {
+        new FlashMessage({type: 'error', message: error});
+      })
   }
 
 
@@ -444,7 +487,8 @@ class Task {
     this.completeLink.innerHTML = `<i class="p-4 far ${this.completeIconClass()} toggleComplete" data-task-id="${this.id}"></i>`
 
     this.nameSpan ||= document.createElement('a');
-    this.nameSpan.classList.set("py-4 col-span-9");
+    this.nameSpan.classList.set("editTask py-4 col-span-9");
+    this.nameSpan.dataset.taskId = this.id;
     this.nameSpan.textContent = this.name;
     // only create the edit and delete links if we don't already have them
     if(!this.editLink) {
