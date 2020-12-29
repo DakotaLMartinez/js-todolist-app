@@ -22,8 +22,7 @@ class TodoList {
     display them, and spreading them out into the list where they'll be appended to the DOM.
   */
   static all() {
-    return fetch("http://localhost:3000/todo_lists")
-      .then(res => res.json())
+    return Auth.fetch("http://localhost:3000/todo_lists")
       .then(todoListsJson => {
         this.collection = todoListsJson.map(tlAttributes => new TodoList(tlAttributes))
         let listItems = this.collection.map(list => list.render())
@@ -37,30 +36,16 @@ class TodoList {
   insert it into the list(). If there's an error, the validation message will get added.
   */
   static create(formData) {
-    return fetch("http://localhost:3000/todo_lists", {
+    return Auth.fetch("http://localhost:3000/todo_lists", {
       method: 'POST',
-      headers: {
-        "Content-Type": "application/json",
-        "Accept": "application/json"
-      },
       body: JSON.stringify({todo_list: formData})
     })
-      .then(res => {
-        if(res.ok) {
-          return res.json()
-        } else {
-          return res.text().then(errors => Promise.reject(errors))
-        }
-      })
       .then(json => {
         let todoList = new TodoList(json);
         this.collection.push(todoList);
         this.container().appendChild(todoList.render());
         new FlashMessage({type: 'success', message: 'TodoList added successfully'})
         return todoList;
-      })
-      .catch(error => {
-        new FlashMessage({type: 'error', message: error});
       })
   }
   /*
@@ -81,25 +66,10 @@ class TodoList {
   the selected list and restoring the original.
   */
   show() {
-    return fetch(`http://localhost:3000/todo_lists/${this.id}`, {
-      headers: {
-        "Content-Type": "application/json",
-        "Accept": "application/json"
-      }
-    })
-      .then(res => {
-        if(res.ok) {
-          return res.json()
-        } else {
-          return res.text().then(errors => Promise.reject(errors))
-        }
-      })
+    return Auth.fetch(`http://localhost:3000/todo_lists/${this.id}`)
       .then(({todo_list, tasks}) => {
         Task.loadFromList(tasks, todo_list.id)
         this.toggleActive();
-      })
-      .catch(error => {
-        new FlashMessage({type: 'error', message: error});
       })
   }
 
@@ -153,21 +123,10 @@ class TodoList {
   user to try again.
   */
   update(formData) {
-    return fetch(`http://localhost:3000/todo_lists/${this.id}`, {
+    return Auth.fetch(`http://localhost:3000/todo_lists/${this.id}`, {
       method: 'PUT',
-      headers: {
-        "Content-Type": "application/json",
-        "Accept": "application/json"
-      },
       body: JSON.stringify({todo_list: formData})
     })
-      .then(res => {
-        if(res.ok) {
-          return res.json()
-        } else {
-          return res.text().then(errors => Promise.reject(errors))
-        }
-      })
       .then(json => {
         //update this object with the json response
         Object.keys(json).forEach((key) => this[key] = json[key])
@@ -178,37 +137,20 @@ class TodoList {
         new FlashMessage({type: 'success', message: 'TodoList updated successfully'})
         return todoList;
       })
-      .catch(error => {
-        new FlashMessage({type: 'error', message: error});
-      })
   }
 
   delete() {
     let proceed = confirm("Are you sure you want to delete this list?");
     if(proceed) {
-      return fetch(`http://localhost:3000/todo_lists/${this.id}`, {
-        method: 'DELETE',
-        headers: {
-          "Content-Type": "application/json",
-          "Accept": "application/json"
-        }
+      return Auth.fetch(`http://localhost:3000/todo_lists/${this.id}`, {
+        method: 'DELETE'
       })
-        .then(res => {
-          if(res.ok) {
-            return res.json()
-          } else {
-            return res.text().then(errors => Promise.reject(errors))
-          }
-        })
         .then(json => {
           //update this object with the json response
           let index = TodoList.collection.findIndex(list => list.id == json.id);
           TodoList.collection.splice(index, 1);
           this.element.remove();
           new FlashMessage({type: 'success', message: 'Todo List deleted successfully'})
-        })
-        .catch(error => {
-          new FlashMessage({type: 'error', message: error});
         })
     }
   }
@@ -319,21 +261,10 @@ class Task {
   */
   static create(formData) {
     formData.todo_list_id = Task.active_todo_list_id;
-    return fetch('http://localhost:3000/tasks', {
+    return Auth.fetch('http://localhost:3000/tasks', {
       method: 'POST', 
-      headers: {
-        "Content-Type": "application/json",
-        "Accept": "application/json"
-      },
       body: JSON.stringify({task: formData})
     })
-      .then(res => {
-        if (res.ok) {
-          return res.json();
-        } else {
-          return res.text().then(errors => Promise.reject(errors));
-        }
-      })
       .then(taskAttributes => {
         let task = new Task(taskAttributes);
         this.collection[this.active_todo_list_id].push(task);
@@ -341,7 +272,6 @@ class Task {
         this.container().appendChild(rendered);
         return task;
       })
-      .catch(err => new FlashMessage({type: 'error', message: err}) )
   }
 
   /*
@@ -349,27 +279,13 @@ class Task {
   it will then update the client side copy and call render on it to update the icon.
   */
   toggleComplete() {
-    return fetch(`http://localhost:3000/tasks/${this.id}`, {
+    return Auth.fetch(`http://localhost:3000/tasks/${this.id}`, {
       method: 'PUT',
-      headers: { 
-        "Content-Type": "application/json",
-        "Accept": "application/json"
-      },
       body: JSON.stringify({task: {completed: !this.completed }})
     })
-      .then(res => {
-        if (res.ok) {
-          return res.json();
-        } else {
-          return res.text().then(errors => Promise.reject(errors));
-        }
-      })
       .then(taskAttributes => {
         Object.keys(taskAttributes).forEach(attr => this[attr] = taskAttributes[attr]);
         this.render();
-      })
-      .catch(err => {
-        new FlashMessage({type: 'error', message: err.message});
       })
   }
 
@@ -439,21 +355,10 @@ class Task {
   user to try again.
   */
   update(formData) {
-    return fetch(`http://localhost:3000/tasks/${this.id}`, {
+    return Auth.fetch(`http://localhost:3000/tasks/${this.id}`, {
       method: 'PUT',
-      headers: {
-        "Content-Type": "application/json",
-        "Accept": "application/json"
-      },
       body: JSON.stringify({task: formData})
     })
-      .then(res => {
-        if(res.ok) {
-          return res.json()
-        } else {
-          return res.text().then(errors => Promise.reject(errors))
-        }
-      })
       .then(json => {
         //update this object with the json response
         Object.keys(json).forEach((key) => this[key] = json[key])
@@ -465,28 +370,14 @@ class Task {
         new FlashMessage({type: 'success', message: 'Task updated successfully'})
         return todoList;
       })
-      .catch(error => {
-        new FlashMessage({type: 'error', message: error});
-      })
   }
 
   delete() {
     let proceed = confirm("Are you sure you want to delete this task?");
     if(proceed) {
-      return fetch(`http://localhost:3000/tasks/${this.id}`, {
-        method: 'DELETE',
-        headers: {
-          "Content-Type": "application/json",
-          "Accept": "application/json"
-        }
+      return Auth.fetch(`http://localhost:3000/tasks/${this.id}`, {
+        method: 'DELETE'
       })
-        .then(res => {
-          if(res.ok) {
-            return res.json()
-          } else {
-            return res.text().then(errors => Promise.reject(errors))
-          }
-        })
         .then(json => {
           //update this object with the json response
           let index = Task.collection[Task.active_todo_list_id].findIndex(task => task.id == json.id);

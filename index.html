@@ -8,9 +8,18 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css" integrity="sha512-+4zCK9k+qNFUR5X+cKL9EIR+ZOhtIloNl9GIKS57V1MyNsYpYcUrUeQc9vNfzsWfV28IaLL3i96P9sdNyeRssA==" crossorigin="anonymous" />
 </head>
 <body>
-  <div class="container mx-auto sm:grid grid-cols-3 gap-4 my-4">
-    <section id="flash" class="col-span-3 h-10 px-4 py-2 opacity-0 transition-all duration-700 ease-in-out"></section>
-    <section id="todoListsContainer" class="px-4 bg-blue-100 sm:min-h-screen rounded-md shadow">
+  <div class="bg-green-500">
+    <navbar class="container mx-auto grid grid-cols-2 py-6 px-3 sm:px-0">
+      <span class="text-white text-2xl font-bold block mt-1">Todo</span>
+      <div id="auth" class="text-right">
+        
+      </div>
+    </navbar>
+  </div>
+  
+  <div class="container mx-auto sm:grid sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-3 gap-4 my-4">
+    <section id="flash" class="sm:col-span-4 md:col-span-5 lg:col-span-3 h-10 px-4 py-2 opacity-0 transition-all duration-700 ease-in-out"></section>
+    <section id="todoListsContainer" class="px-4 bg-blue-100 sm:min-h-screen sm:col-span-2 md:col-span-2 lg:col-span-1 rounded-md shadow">
       <h1 class="text-2xl semibold border-b-4 border-blue">Todo Lists</h1>
       <form id="newTodoList" class="flex mt-4">
         <input type="text" class="flex-1 p-3" name="name" placeholder="New List" />
@@ -20,7 +29,7 @@
         
       </ul>
     </section>
-    <section id="tasksContainer" class="px-4 bg-blue-100 sm:min-h-screen col-span-2 rounded-md shadow">
+    <section id="tasksContainer" class="px-4 bg-blue-100 sm:min-h-screen sm:col-span-2 md:col-span-3 lg:col-span-2 rounded-md shadow">
       <h1 class="text-2xl semibold border-b-4 border-blue">Tasks</h1>
       <form id="newTask" class="flex mt-4">
         <input type="text" class="block flex-1 p-3" name="name" placeholder="New Task" />
@@ -60,19 +69,15 @@
         </div>
 
         <!--Body-->
-        <div id="modal-content"></div>
-
-        <!-- Footer
-        <div class="flex justify-end pt-2"> 
-          <button class="px-4 bg-transparent p-3 rounded-lg text-indigo-500 hover:bg-gray-100 hover:text-indigo-400 mr-2">Action</button>
-          <button class="modal-close px-4 bg-indigo-500 p-3 rounded-lg text-white hover:bg-indigo-400">Close</button>
-        </div> -->
-        
+        <div id="modal-content">
+          
+        </div>
       </div>
     </div>
   </div>
   <script src="js/utilities.js"></script>
   <script src="js/models.js"></script>
+  <script src="js/auth.js"></script>
   <script src="js/listeners.js"></script>
 </body>
 </html>
