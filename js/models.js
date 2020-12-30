@@ -181,19 +181,19 @@ class TodoList {
   */
   render() {
     this.element ||= document.createElement('li');
-    this.element.classList.add(...`my-2 px-4 bg-green-200 grid grid-cols-12 sm:grid-cols-6`.split(" "));
+    this.element.classList.set(`my-2 px-4 bg-green-200 grid grid-cols-12 sm:grid-cols-6`);
     
     this.nameLink ||= document.createElement('a');
-    this.nameLink.classList.add(..."py-4 col-span-10 sm:col-span-4 selectTodoList".split(" "));
+    this.nameLink.classList.set("py-4 col-span-10 sm:col-span-4 selectTodoList");
     this.nameLink.textContent = this.name;
     this.nameLink.dataset.todoListId = this.id;
 
     this.editLink ||= document.createElement('a');
-    this.editLink.classList.add(..."my-4 text-right".split(" "));
+    this.editLink.classList.set("my-4 text-right");
     this.editLink.innerHTML = `<i class="fa fa-pencil-alt"></i>`;
 
     this.deleteLink ||= document.createElement('a');
-    this.deleteLink.classList.add(..."my-4 text-right".split(" "));
+    this.deleteLink.classList.set("my-4 text-right");
     this.deleteLink.innerHTML = `<i class="deleteTodoList fa fa-trash-alt" data-todo-list-id="${this.id}"></i>`;
 
     this.element.append(this.nameLink, this.editLink, this.deleteLink);
@@ -204,7 +204,7 @@ class TodoList {
 
 class Task {
   constructor(attributes) {
-    let whitelist = ["id", "name", "todo_list_id", "completed"]
+    let whitelist = ["id", "name", "todo_list_id", "completed", "notes"]
     whitelist.forEach(attr => this[attr] = attributes[attr])
   }
 
@@ -316,6 +316,79 @@ class Task {
   }
 
   /*
+  task.edit() => returns a form that will allow updating a task. 
+  */
+  edit() {
+    this.editForm ||= document.createElement('form');
+    this.editForm.classList.set("editTaskForm mb-2");
+    this.editForm.dataset.taskId = this.id;
+    this.editForm.innerHTML = `
+      <fieldset class="my-2">
+        <label for="name" class="block w-full uppercase">Name</label>
+        <input  
+          type="text" 
+          name="name" 
+          id="name"
+          class="w-full border-2 rounded p-2 focus:outline-none focus:ring focus:border-blue-300" 
+        />
+      </fieldset>
+      <fieldset class="my-2">
+        <label for="notes" class="block w-full uppercase">Notes</label>
+        <textarea 
+          id="notes" 
+          name="notes" 
+          class="w-full h-32 border-2 rounded p-2 focus:outline-none focus:ring focus:border-blue-300"
+        ></textarea>
+      </fieldset> 
+      <input 
+        type="submit" 
+        class="w-full block py-3 bg-green-400 hover:bg-green-500 transition duration-200 uppercase font-semibold cursor-pointer" 
+        value="Save Task" 
+      />
+    </form>
+    `
+    this.editForm.querySelector('#name').value = this.name;
+    this.editForm.querySelector('#notes').value = this.notes || '';
+    return this.editForm;
+  }
+
+  /*
+  task.update(formData) => {
+    1. update backend via fetch request
+    2. upon success return response parsed as JSON object, upon failure return rejected promise with error message
+    3. use successful response to update `this` object. 
+    4. Call this.render() to update the list item in the dom with the new info.
+    5. add success flash message 
+    6. upon failure, catch error and return new FlashMessage to display it.
+  }
+  */
+  
+  update(formData) {
+    return fetch(`http://localhost:3000/tasks/${this.id}`, {
+      method: "PUT",
+      headers: {
+        "Accept": "application/json", 
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({task: formData})
+    })
+      .then(res => {
+        if(res.ok) {
+          return res.json() // returns a promise for body content parsed as JSON
+        } else {
+          return res.text().then(error => Promise.reject(error)) // return a reject promise so we skip the following then
+        }
+      })
+      .then((taskAttributes) => {
+        Object.keys(taskAttributes).forEach(attr => this[attr] = taskAttributes[attr])
+        this.render();
+        new FlashMessage({type: 'success', message: 'Task updated successfully'});
+        // this.element.remove();
+        // return this;
+      })
+      .catch(error => new FlashMessage({type: 'error', message: error}))
+  }
+  /*
   task.delete => {
     send fetch request to delete task with matching id 
     upon successful response, remove the task from this.collection()
@@ -356,22 +429,22 @@ class Task {
   */
   render() {
     this.element ||= document.createElement('li');
-    this.element.classList.add(..."my-2 px-4 bg-green-200 grid grid-cols-12".split(" "));
+    this.element.classList.set("my-2 px-4 bg-green-200 grid grid-cols-12");
 
     this.markCompleteLink ||= document.createElement('a');
-    this.markCompleteLink.classList.add(..."my-1 text-center".split(" "));
+    this.markCompleteLink.classList.set("my-1 text-center");
     this.markCompleteLink.innerHTML = `<i class="toggleComplete p-4 far ${this.completeIconClass()}" data-task-id="${this.id}"></i>`;
 
     this.nameSpan ||= document.createElement('span');
-    this.nameSpan.classList.add(..."py-4 col-span-9".split(" "));
+    this.nameSpan.classList.set("py-4 col-span-9");
     this.nameSpan.textContent = this.name; 
 
     this.editLink ||= document.createElement('a');
-    this.editLink.classList.add(..."my-1 text-right".split(" "));
-    this.editLink.innerHTML = `<i class="p-4 fa fa-pencil-alt"></i>`;
+    this.editLink.classList.set("my-1 text-right");
+    this.editLink.innerHTML = `<i class="editTask p-4 fa fa-pencil-alt" data-task-id="${this.id}"></i>`;
 
     this.deleteLink ||= document.createElement('a');
-    this.deleteLink.classList.add(..."my-1 text-right".split(" "));
+    this.deleteLink.classList.set("my-1 text-right");
     this.deleteLink.innerHTML = `<i class="deleteTask p-4 fa fa-trash-alt" data-task-id="${this.id}"></i>`;
 
     this.element.append(this.markCompleteLink, this.nameSpan, this.editLink, this.deleteLink);

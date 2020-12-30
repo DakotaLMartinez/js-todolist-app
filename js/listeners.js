@@ -1,5 +1,6 @@
 document.addEventListener('DOMContentLoaded', function(e) {
   TodoList.all();
+  Modal.init();
 })
 
 document.addEventListener('click', function(e) {
@@ -16,6 +17,11 @@ document.addEventListener('click', function(e) {
   } else if(target.matches(".toggleComplete")) {
     let task = Task.findById(target.dataset.taskId);
     task.toggleComplete();
+  } else if(target.matches(".editTask")) {
+    let task = Task.findById(target.dataset.taskId);
+    Modal.populate({title: "Edit Task", content: task.edit()})
+    Modal.toggle()
+    
   } else if(target.matches(".deleteTask")) {
     if(confirm("Are you sure you want to delete this task?")) {
       let task = Task.findById(target.dataset.taskId);
@@ -28,27 +34,19 @@ document.addEventListener('submit', function(e) {
   let target = e.target;
   if(target.matches('#newTodoList')) {
     e.preventDefault();
-    let formData = {}
-    target.querySelectorAll('input').forEach(function(input) {
-      formData[input.name] = input.value;
-    })
-    TodoList.create(formData)
+    TodoList.create(target.serialize())
       .then(() => {
-        target.querySelectorAll('input').forEach(function(input) {
-          input.value = "";
-        })
+        target.reset();
+        target.querySelector('input[name="name"]').blur();
       });
   } else if(target.matches('#newTaskForm')) {
     e.preventDefault();
-    let formData = {};
-    target.querySelectorAll('input').forEach(function(input) {
-      formData[input.name] = input.value;
-    });
-    Task.create(formData)
-      .then(() => {
-        target.querySelectorAll('input').forEach(function(input) {
-          input.value = "";
-        })
-      });
+    Task.create(target.serialize())
+      .then(() => target.reset());
+  } else if(target.matches('.editTaskForm')) {
+    e.preventDefault();
+    let task = Task.findById(target.dataset.taskId);
+    task.update(target.serialize())
+      .then(() => Modal.toggle())
   }
 })
