@@ -327,3 +327,52 @@ else if(target.matches('.editTaskForm')) {
     .then(() => Modal.toggle())
 }
 ```
+
+Finally, we want to get the modal close functionality working as well. To do this, we'll need to add another conditional to our click event handler:
+
+```js
+else if(target.matches(".modal-close") || target.matches(".modal-overlay")) {
+  e.preventDefault();
+  Modal.toggle();
+} 
+```
+
+Add the `.modal-close` to the html tags inside of the modal-close elements. This is necessary because of how we're attaching event listeners
+using the event delegation pattern. Adding the class to all of the elements that will possibly be clicked will ensure we're able to close 
+the modal.
+```html
+<div class="modal-close absolute top-0 right-0 cursor-pointer flex flex-col items-center mt-4 mr-4 text-white text-sm z-50">
+  <svg class="modal-close fill-current text-white" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18">
+    <path d="M14.53 4.53l-1.06-1.06L9 7.94 4.53 3.47 3.47 4.53 7.94 9l-4.47 4.47 1.06 1.06L9 10.06l4.47 4.47 1.06-1.06L10.06 9z"></path>
+  </svg>
+  <span class="modal-close text-sm">(Esc)</span>
+</div>
+```
+
+```html
+<div class="flex justify-between items-center pb-3">
+  <p id="modal-title" class="text-2xl font-bold">Edit Task</p>
+  <div class="modal-close cursor-pointer z-50">
+    <svg class="modal-close fill-current text-black" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18">
+      <path d="M14.53 4.53l-1.06-1.06L9 7.94 4.53 3.47 3.47 4.53 7.94 9l-4.47 4.47 1.06 1.06L9 10.06l4.47 4.47 1.06-1.06L10.06 9z"></path>
+    </svg>
+  </div>
+</div>
+```
+
+Finally, we need to add the keydown event listener so that the escape key will also dismiss the modal:
+
+```js
+document.addEventListener('keydown', function(evt) {
+  evt = evt || window.event
+  var isEscape = false
+  if ("key" in evt) {
+    isEscape = (evt.key === "Escape" || evt.key === "Esc")
+  } else {
+    isEscape = (evt.keyCode === 27)
+  }
+  if (isEscape && document.body.classList.contains('modal-active')) {
+    Modal.toggle()
+  }
+});
+```
