@@ -1,12 +1,19 @@
 document.addEventListener('DOMContentLoaded', function(e) {
-  TodoList.all();
+  Auth.init();
   Modal.init();
 })
 
 document.addEventListener('click', function(e) {
   let target = e.target;
 
-  if(target.matches(".selectTodoList")) {
+  if (target.matches('.loginLink')) {
+    e.preventDefault();
+    Modal.populate({title: "", content: Auth.loginForm()})
+    Modal.toggle();
+  } else if (target.matches('.logoutLink')) {
+    e.preventDefault();
+    Auth.logout();
+  } else if(target.matches(".selectTodoList")) {
     let todoList = TodoList.findById(target.dataset.todoListId);
     todoList.show();
   } else if(target.matches(".deleteTodoList")) {
@@ -25,6 +32,16 @@ document.addEventListener('click', function(e) {
     if(confirm("Are you sure you want to delete this task?")) {
       let task = Task.findById(target.dataset.taskId);
       task.delete();
+    }
+  } else if (target.matches('.multi-submit[type="submit"]')) {
+    e.preventDefault();
+    let form = target.closest('form');
+    if(form.matches('.authForm')) {
+      if(target.value === "Login") {
+        Auth.login(form.serialize());
+      } else if(target.value === "Signup") {
+        Auth.signup(form.serialize());
+      }
     }
   } else if(target.matches(".modal-close") || target.matches(".modal-overlay")) {
     e.preventDefault();

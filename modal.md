@@ -308,8 +308,6 @@ update(formData) {
       Object.keys(taskAttributes).forEach(attr => this[attr] = taskAttributes[attr])
       this.render();
       new FlashMessage({type: 'success', message: 'Task updated successfully'});
-      // this.element.remove();
-      // return this;
     })
     .catch(error => new FlashMessage({type: 'error', message: error}))
 }

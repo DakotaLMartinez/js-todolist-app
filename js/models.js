@@ -26,25 +26,14 @@ class TodoList {
   */
   static all() {
     console.log(this);
-    return fetch("http://localhost:3000/todo_lists", {
-      headers: {
-        "Accept": "application/json",
-        "Content-Type": "application/json"
-      }
-    })
-      .then(res => {
-        if(res.ok) {
-          return res.json() // returns a promise for body content parsed as JSON
-        } else {
-          return res.text().then(error => Promise.reject(error)) // return a reject promise so we skip the following then and go to catch
-        }
-      })
+    return Auth.fetch("http://localhost:3000/todo_lists")
       .then(todoListArray => {
         this.collection = todoListArray.map(attrs => new TodoList(attrs))
         let renderedLists = this.collection.map(todoList => todoList.render())
         this.container().append(...renderedLists);
         return this.collection
       })
+      .catch(error => new FlashMessage(error));
   }
   
   /*
@@ -62,21 +51,10 @@ class TodoList {
   It will return a promise for the TodoList object that was created.
   */
   static create(formData) {
-    return fetch("http://localhost:3000/todo_lists", {
+    return Auth.fetch("http://localhost:3000/todo_lists", {
       method: 'POST',
-      headers: {
-        "Accept": "application/json",
-        "Content-Type": "application/json"
-      },
       body: JSON.stringify({todo_list: formData})
     })
-      .then(res => {
-        if(res.ok) {
-          return res.json() // returns a promise for body content parsed as JSON
-        } else {
-          return res.text().then(error => Promise.reject(error)) // return a reject promise so we skip the following then and go to catch
-        }
-      })
       .then(todoListAttributes => {
         let todoList = new TodoList(todoListAttributes);
         this.collection.push(todoList);
@@ -84,9 +62,7 @@ class TodoList {
         new FlashMessage({type: 'success', message: 'New list added successfully'})
         return todoList;
       })
-      .catch(error => {
-        new FlashMessage({type: 'error', message: error});
-      })
+      .catch(error => new FlashMessage(error));
   }
 
   /*
@@ -98,20 +74,7 @@ class TodoList {
   }
   */
   show() {
-    return fetch(`http://localhost:3000/todo_lists/${this.id}`, {
-      method: 'GET', 
-      headers: {
-        "Accept": "application/json",
-        "Content-Type": "application/json"
-      }
-    })
-      .then(res => {
-        if(res.ok) {
-          return res.json() // returns a promise for body content parsed as JSON
-        } else {
-          return res.text().then(error => Promise.reject(error)) // return a reject promise so we skip the following then
-        }
-      })
+    return Auth.fetch(`http://localhost:3000/todo_lists/${this.id}`)
       .then(({id, tasksAttributes}) => {
         Task.loadByList(id, tasksAttributes)
         this.markActive()
@@ -145,20 +108,9 @@ class TodoList {
   }
   */
  delete() {
-  return fetch(`http://localhost:3000/todo_lists/${this.id}`, {
-    method: "DELETE",
-    headers: {
-      "Accept": "application/json", 
-      "Content-Type": "application/json"
-    }
+  return Auth.fetch(`http://localhost:3000/todo_lists/${this.id}`, {
+    method: "DELETE"
   })
-    .then(res => {
-      if(res.ok) {
-        return res.json() // returns a promise for body content parsed as JSON
-      } else {
-        return res.text().then(error => Promise.reject(error)) // return a reject promise so we skip the following then
-      }
-    })
     .then(({id}) => {
       let index = TodoList.collection.findIndex(task => task.id == id)
       TodoList.collection.splice(index, 1);
@@ -256,23 +208,10 @@ class Task {
     } else {
       formData.todo_list_id = Task.active_todo_list_id;
     }
-    return fetch('http://localhost:3000/tasks',{
+    return Auth.fetch('http://localhost:3000/tasks',{
       method: 'POST',
-      headers: {
-        "Accept": "application/json",
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        task: formData
-      })
+      body: JSON.stringify({ task: formData })
     })
-      .then(res => {
-        if(res.ok) {
-          return res.json() // returns a promise for body content parsed as JSON
-        } else {
-          return res.text().then(error => Promise.reject(error)) // return a reject promise so we skip the following then
-        }
-      })
       .then(taskData => {
         let task = new Task(taskData);
         this.collection()[Task.active_todo_list_id].push(task);
@@ -287,23 +226,10 @@ class Task {
   opposite to its current state. It will take a successful response and use it to update the task object stored client side and update the DOM by invoking render on the updated task.
   */
   toggleComplete() {
-    fetch(`http://localhost:3000/tasks/${this.id}`, {
-      method: 'PUT', 
-      headers: {
-        "Accept": "application/json",
-        "Content-Type": "application/json"
-      }, 
-      body: JSON.stringify({
-        task: { completed: !this.completed }
-      })
+    Auth.fetch(`http://localhost:3000/tasks/${this.id}`, {
+      method: 'PUT',  
+      body: JSON.stringify({ task: { completed: !this.completed } })
     })
-      .then(res => {
-        if(res.ok) {
-          return res.json() // returns a promise for body content parsed as JSON
-        } else {
-          return res.text().then(error => Promise.reject(error)) // return a reject promise so we skip the following then
-        }
-      })
       .then(taskAttributes => {
         Object.keys(taskAttributes).forEach(attr => this[attr] = taskAttributes[attr]);
         this.render();
@@ -364,21 +290,10 @@ class Task {
   */
   
   update(formData) {
-    return fetch(`http://localhost:3000/tasks/${this.id}`, {
+    return Auth.fetch(`http://localhost:3000/tasks/${this.id}`, {
       method: "PUT",
-      headers: {
-        "Accept": "application/json", 
-        "Content-Type": "application/json"
-      },
       body: JSON.stringify({task: formData})
     })
-      .then(res => {
-        if(res.ok) {
-          return res.json() // returns a promise for body content parsed as JSON
-        } else {
-          return res.text().then(error => Promise.reject(error)) // return a reject promise so we skip the following then
-        }
-      })
       .then((taskAttributes) => {
         Object.keys(taskAttributes).forEach(attr => this[attr] = taskAttributes[attr])
         this.render();
@@ -396,20 +311,9 @@ class Task {
   }
   */
   delete() {
-    return fetch(`http://localhost:3000/tasks/${this.id}`, {
-      method: "DELETE",
-      headers: {
-        "Accept": "application/json", 
-        "Content-Type": "application/json"
-      }
+    return Auth.fetch(`http://localhost:3000/tasks/${this.id}`, {
+      method: "DELETE"
     })
-      .then(res => {
-        if(res.ok) {
-          return res.json() // returns a promise for body content parsed as JSON
-        } else {
-          return res.text().then(error => Promise.reject(error)) // return a reject promise so we skip the following then
-        }
-      })
       .then(({id}) => {
         let index = Task.collection()[Task.active_todo_list_id].findIndex(task => task.id == id)
         Task.collection()[Task.active_todo_list_id].splice(index, 1);
